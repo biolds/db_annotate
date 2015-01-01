@@ -57,6 +57,29 @@ class PG:
         res = self.cursor.fetchall()
         return [r[0] for r in res]
 
+    def get_table_index(self, table):
+        # Based on http://stackoverflow.com/questions/2204058/show-which-columns-an-index-is-on-in-postgresql
+        self.cursor.execute('''select
+            a.attname as column_name
+        from
+            pg_class t,
+            pg_class i,
+            pg_index ix,
+            pg_attribute a
+        where
+            t.oid = ix.indrelid
+            and i.oid = ix.indexrelid
+            and a.attrelid = t.oid
+            and a.attnum = ANY(ix.indkey)
+            and t.relkind = 'r'
+            and t.relname = %(table_name)s
+        order by
+            t.relname,
+            i.relname''', {'table_name': table})
+
+        res = self.cursor.fetchall()
+        return [r[0] for r in res]
+
     def get_constraints(self, table, constraint_type='FOREIGN KEY'):
         # Based on http://stackoverflow.com/questions/1152260/postgres-sql-to-list-table-foreign-keys
         #print('table:', table, 'constraint:', constraint_type)

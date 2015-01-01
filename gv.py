@@ -14,7 +14,7 @@ class GV:
         self.tables = {}
         print(GV_HEADER)
 
-    def add_table(self, name, sizes, keys, columns):
+    def add_table(self, name, sizes, keys, indexes, columns):
         # Display the table in red when there is no entries
         color = 'white'
         if sizes[2] == '0':
@@ -26,10 +26,14 @@ class GV:
 
         for column in columns:
             column, data_type, char_max, nullable, default, unique = column
-            col_id = "%s%s%s" % (name, GV_SEPARATOR, column)
+            col_id = ''
+
+            col_id += "%s%s%s" % (name, GV_SEPARATOR, column)
             color = 'gray'
             if column in keys:
                 color = 'limegreen'
+            if column in indexes:
+                column = '* %s' % column
             col_type = data_type
             if data_type.startswith('character '):
                 col_type += '(%s)' % char_max
@@ -37,8 +41,8 @@ class GV:
                 if default.startswith('nextval'):
                     default = 'nextval'
                 col_type += ' ' + default
-            if not nullable:
-                col_type += ' non null'
+            if nullable == 'NO':
+                col_type += ' non-null'
             if unique:
                 col_type += ' unique'
             column = """<TR>
