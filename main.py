@@ -12,7 +12,8 @@ if __name__ == '__main__':
         sizes = pg.get_table_size(table)
         keys = pg.get_table_keys(table)
         indexes = pg.get_table_index(table)
-        gv.add_table(table, sizes, keys, indexes, columns)
+        errors = pg.get_table_errors(table)
+        gv.add_table(table, errors, sizes, keys, indexes, columns)
 
     # Constraints
     for table in pg.get_tables():

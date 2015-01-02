@@ -42,17 +42,20 @@ digraph G {
         </TABLE>>];
     legend2 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
             <TR>
-                <TD BGCOLOR="white">Example table</TD>
-                <TD >I</TD>
-                <TD >NN</TD>
-                <TD >U</TD>
+                <TD BGCOLOR="firebrick1"><B>Example table with errors</B></TD>
+                <TD BGCOLOR="firebrick1">I</TD>
+                <TD BGCOLOR="firebrick1">NN</TD>
+                <TD BGCOLOR="firebrick1">U</TD>
+                <TD BGCOLOR="firebrick1"></TD>
+                <TD BGCOLOR="firebrick1">table errors</TD>
             </TR>
             <TR>
-                <TD ALIGN="left" PORT="legend_primary_key" BGCOLOR="limegreen">column_with_a_primary_key</TD>
-                <TD BGCOLOR="limegreen"></TD>
-                <TD BGCOLOR="limegreen"></TD>
-                <TD BGCOLOR="limegreen"></TD>
-                <TD ALIGN="right" BGCOLOR="limegreen">data type</TD>
+                <TD ALIGN="left" PORT="legend_primary_key" BGCOLOR="firebrick1">column_with_a_primary_key</TD>
+                <TD BGCOLOR="firebrick1"></TD>
+                <TD BGCOLOR="firebrick1"></TD>
+                <TD BGCOLOR="firebrick1"></TD>
+                <TD ALIGN="right" BGCOLOR="firebrick1">data type</TD>
+                <TD ALIGN="left" BGCOLOR="firebrick1">column errors</TD>
             </TR>
         </TABLE>>];
 
@@ -72,23 +75,28 @@ class GV:
         self.tables = {}
         print(GV_HEADER)
 
-    def add_table(self, name, sizes, keys, indexes, columns):
+    def add_table(self, name, errors, sizes, keys, indexes, columns):
         # Display the table in red when there is no entries
         color = 'white'
-        if sizes[2] == '0':
+        if len(errors):
             color = 'firebrick1'
 
-        table = """%s [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+        table = """{name} [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
         <TR>
-            <TD PORT="%s" BGCOLOR="%s">%s (%s)</TD>
-            <TD >I</TD>
-            <TD >NN</TD>
-            <TD >U</TD>
-        </TR>""" % (name, name, color, name, '/'.join(sizes))
+            <TD PORT="{name}" BGCOLOR="{color}"><B>{name} ({sizes})</B></TD>
+            <TD BGCOLOR="{color}">I</TD>
+            <TD BGCOLOR="{color}">NN</TD>
+            <TD BGCOLOR="{color}">U</TD>
+            <TD BGCOLOR="{color}"></TD>
+            <TD ALIGN="left" BGCOLOR="{color}">{errors}</TD>
+        </TR>""".format(name=name,
+                        color=color,
+                        sizes='/'.join(sizes),
+                        errors=', '.join(errors))
         print(table)
 
         for column in columns:
-            column, data_type, char_max, nullable, default, unique = column
+            column, data_type, char_max, nullable, default, unique, errors = column
             col_id = ''
 
             col_id += "%s%s%s" % (name, GV_SEPARATOR, column)
@@ -115,14 +123,15 @@ class GV:
             if default:
                 if default.startswith('nextval'):
                     default = 'nextval'
-                col_type += ' ' + default
+                col_type += '/def:' + default
 
             column = """<TR>
                 <TD ALIGN="left" PORT="{col_id}" BGCOLOR="{color}">{column}</TD>
                 <TD BGCOLOR="{color}">{has_index}</TD>
                 <TD BGCOLOR="{color}">{nullable}</TD>
                 <TD BGCOLOR="{color}">{unique}</TD>
-                <TD ALIGN="right" PORT="{col_id}1" BGCOLOR="{color}">{col_type}</TD>
+                <TD ALIGN="right" BGCOLOR="{color}">{col_type}</TD>
+                <TD ALIGN="left" BGCOLOR="{error_color}" PORT="{col_id}1" >{error}</TD>
             </TR>""".format(**{
                 'col_id': col_id,
                 'col_type': col_type,
@@ -131,6 +140,8 @@ class GV:
                 'has_index': has_index,
                 'unique': unique,
                 'nullable': nullable,
+                'error': ', '.join(errors),
+                'error_color': 'firebrick1' if len(errors) else color,
             })
             print(column)
         print("</TABLE>>];")
