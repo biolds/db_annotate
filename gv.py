@@ -13,7 +13,7 @@ digraph G {
     // Legend
     legend [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
             <TR>
-                <TD BGCOLOR="white">Legend (size without indexes/total size/lines count)</TD>
+                <TD BGCOLOR="white"><B>Legend (size without indexes/total size/lines count)</B></TD>
                 <TD >I'</TD>
                 <TD >NN'</TD>
                 <TD >U'</TD>
