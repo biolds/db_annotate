@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     # Constraints
     for table in pg.get_tables():
-        for src, dst in pg.get_constraints(table):
+        for src, dst in pg.get_constraints(table) + pg.get_constraints(table, 'PRIMARY KEY'):
             gv.add_constraint(src, dst)
 
     # Inheritance link
