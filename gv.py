@@ -3,6 +3,64 @@ digraph G {
     overlap = scale;
     splines = true;
     node [shape=plaintext];
+
+    subgraph {
+    rank = sink;
+    label = "Legend";
+    graph[style=solid];
+    bgcolor=gray;
+
+    // Legend
+    legend [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+            <TR>
+                <TD BGCOLOR="white">Legend (size without indexes/total size/lines count)</TD>
+                <TD >I'</TD>
+                <TD >NN'</TD>
+                <TD >U'</TD>
+            </TR>
+            <TR>
+                <TD ALIGN="left" BGCOLOR="gray">column</TD>
+                <TD BGCOLOR="gray"></TD>
+                <TD BGCOLOR="gray"></TD>
+                <TD BGCOLOR="gray"></TD>
+                <TD ALIGN="right" BGCOLOR="gray">data type</TD>
+            </TR>
+            <TR>
+                <TD ALIGN="left" BGCOLOR="limegreen">column_with_a_foreign_key</TD>
+                <TD BGCOLOR="limegreen"></TD>
+                <TD BGCOLOR="limegreen"></TD>
+                <TD BGCOLOR="limegreen"></TD>
+                <TD ALIGN="right" PORT="legend_foreign_key" BGCOLOR="limegreen">data type</TD>
+            </TR>
+            <TR>
+                <TD ALIGN="left" BGCOLOR="gray">I', NN', U': Index, Non null, Unique</TD>
+                <TD BGCOLOR="gray"></TD>
+                <TD BGCOLOR="gray"></TD>
+                <TD BGCOLOR="gray"></TD>
+                <TD ALIGN="right" BGCOLOR="gray"></TD>
+            </TR>
+        </TABLE>>];
+    legend2 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+            <TR>
+                <TD BGCOLOR="white">Example table</TD>
+                <TD >I</TD>
+                <TD >NN</TD>
+                <TD >U</TD>
+            </TR>
+            <TR>
+                <TD ALIGN="left" PORT="legend_primary_key" BGCOLOR="limegreen">column_with_a_primary_key</TD>
+                <TD BGCOLOR="limegreen"></TD>
+                <TD BGCOLOR="limegreen"></TD>
+                <TD BGCOLOR="limegreen"></TD>
+                <TD ALIGN="right" BGCOLOR="limegreen">data type</TD>
+            </TR>
+        </TABLE>>];
+
+        // Link the two table
+        // :e / :w to tell to link from the East border of the cell to the West border
+        // of the other cell
+        legend:legend_foreign_key:e -> legend2:legend_primary_key:w;
+        }
 """
 GV_FOOTER = """
 }
