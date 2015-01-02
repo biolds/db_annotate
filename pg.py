@@ -25,7 +25,7 @@ class PG:
 
             print(help_str, file=sys.stderr)
             print("\nFor example %s dbname=localhost user=postgres" % sys.argv[0], file=sys.stderr)
-            exit(sys.EXIT_FAILURE)
+            sys.exit(1)
 
     def get_tables(self):
         self.cursor.execute('''SELECT table_name
