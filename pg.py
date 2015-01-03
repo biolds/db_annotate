@@ -48,20 +48,24 @@ class PG:
         unicity = [col + (col[0] in unicity,) for col in res]
         _res = []
 
+        sizes = self.get_table_size(table)
         # Check value differences
         for col in unicity:
-            self.cursor.execute('SELECT %s, COUNT(%s) FROM %s GROUP BY %s LIMIT %s' % (col[0], col[0], table, col[0], MIN_TABLE_SIZE))
-            res = self.cursor.fetchall()
-            error = []
-            if len(res) == 1 and res[0][1] > 1:
-                error.append('value is always "%s"' % res[0][0])
-            elif len(res) == 2 and col[1] != 'boolean':
-                error.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-            elif len(res) < MIN_TABLE_SIZE and col[1] != 'enumeration':
-                lines_count = sum([r[1] for r in res])
-                if lines_count > MIN_TABLE_SIZE:
-                    error.append('has less than %s distinct values' % MIN_TABLE_SIZE)
-            _res.append(col + (error, ))
+            errors = []
+            if sizes[4] >= MIN_TABLE_SIZE:
+                self.cursor.execute('SELECT %s, COUNT(%s) FROM %s GROUP BY %s LIMIT %s' % (col[0], col[0], table, col[0], MIN_TABLE_SIZE))
+                res = self.cursor.fetchall()
+                if len(res) == 1 and res[0][1] > 1:
+                    errors.append('value is always "%s"' % res[0][0])
+                elif len(res) == 2 and col[1] != 'boolean':
+                    errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
+                elif len(res) < MIN_TABLE_SIZE and col[1] not in ('boolean', 'enumeration')\
+                        and not col[1].startswith('int') \
+                        and not col[1].endswith('int'):
+                    lines_count = sum([r[1] for r in res])
+                    if lines_count > MIN_TABLE_SIZE:
+                        errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
+            _res.append(col + (errors, ))
         return _res
 
     def get_table_keys(self, table):
