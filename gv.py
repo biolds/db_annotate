@@ -6,7 +6,7 @@ digraph G {
 
     subgraph {
     rank = sink;
-    label = "Legend";
+    label = "Legend table";
     graph[style=solid];
     bgcolor=gray;
 
@@ -98,7 +98,7 @@ class GV:
         print(table)
 
         for column in columns:
-            column, data_type, char_max, nullable, default, unique, errors = column
+            column, data_type, char_max, nullable, default, unique, col_errors = column
             col_id = ''
 
             col_id += "%s%s%s" % (name, GV_SEPARATOR, column)
@@ -142,8 +142,8 @@ class GV:
                 'has_index': has_index,
                 'unique': unique,
                 'nullable': nullable,
-                'error': ', '.join(errors),
-                'error_color': 'firebrick1' if len(errors) else color,
+                'error': ', '.join(col_errors),
+                'error_color': 'firebrick1' if len(col_errors) else color,
             })
             print(column)
         print("</TABLE>>];")
