@@ -123,11 +123,14 @@ class PG:
                 continue
             for column in columns:
                 #print('other_table:', other_table)
-                for pattern in ['', '_id', '_ptr_id']:
-                    if column == other_table + pattern:
-                        #print('column:', column, 'other:', other_table)
-                        constraints.append((table, column, other_table, 'missing constraint or ambiguous naming'))
-                        break
+                for pattern in ['', 'id', '_id', '_ptr_id']:
+                    for other_pattern in ['', 's']:
+                        if column + other_pattern == other_table + pattern:
+                            constraints.append((table, column, other_table, 'missing constraint or ambiguous naming'))
+                            break
+                    else:
+                        continue
+                    break
         #print('constraints:', constraints)
         return constraints
 
