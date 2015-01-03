@@ -63,6 +63,7 @@ digraph G {
         // :e / :w to tell to link from the East border of the cell to the West border
         // of the other cell
         legend:legend_foreign_key:e -> legend2:legend_primary_key:w;
+        image -> legend [style=invis];
         }
 """
 GV_FOOTER = """
@@ -76,6 +77,7 @@ class GV:
         print(GV_HEADER)
 
     def add_table(self, name, errors, sizes, keys, indexes, columns):
+        sizes = sizes[:2] + [sizes[4]]
         # Display the table in red when there is no entries
         color = 'white'
         if len(errors):
@@ -163,3 +165,6 @@ class GV:
 
     def add_footer(self):
         print(GV_FOOTER)
+
+    def add_img(self, filename):
+        print('image [label="" image="%s"];' % filename)

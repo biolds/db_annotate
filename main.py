@@ -1,10 +1,19 @@
 #!/usr/bin/python3
+from db_size import DBSize
 from gv import GV
 from pg import PG
 
 if __name__ == '__main__':
     pg = PG()
     gv = GV()
+    db_size = DBSize()
+
+    # DB size pies
+    for table in pg.get_tables():
+        sizes = pg.get_table_size(table)
+        db_size.add_table(table, sizes)
+    db_size_img = db_size.render()
+    gv.add_img(db_size_img)
 
     # Tables
     for table in pg.get_tables():

@@ -143,9 +143,9 @@ class PG:
 
     def get_table_size(self, table):
         # Based on http://www.niwi.be/2013/02/17/postgresql-database-table-indexes-size/
-        self.cursor.execute('select pg_size_pretty(pg_relation_size(%(table_name)s)), pg_size_pretty(pg_total_relation_size(%(table_name)s))', {'table_name': table})
+        self.cursor.execute('select pg_size_pretty(pg_relation_size(%(table_name)s)), pg_size_pretty(pg_total_relation_size(%(table_name)s)), pg_relation_size(%(table_name)s), pg_total_relation_size(%(table_name)s)', {'table_name': table})
         res = self.cursor.fetchall()[0]
-        res = [size.replace(' ', '').replace('bytes', 'b') for size in res]
+        res = [str(size).replace(' ', '').replace('bytes', 'b') for size in res]
         self.cursor.execute('select count(*) from %s' % table)
         res += self.cursor.fetchall()[0]
         return res
@@ -179,7 +179,7 @@ class PG:
         return duplicated
 
     def get_table_errors(self, table):
-        table_size = self.get_table_size(table)[2]
+        table_size = self.get_table_size(table)[4]
         errors = []
         if table_size == 0:
             errors += ['empty table']
