@@ -75,14 +75,16 @@ class DBSize:
             axis = fig.add_axes([0.25, (int(graph_len) - 1 - i) / graph_len, 0.5 * 0.9, 0.9 * (1 / graph_len)])
             tables = getattr(self, graph + '_size')
             sorted_values = list(((k, tables[k]) for k in sorted(tables, key=tables.get, reverse=True)))[:TOP_N_VALUES]
+
+            for j, val in enumerate(sorted_values):
+                if val[1] < sorted_values[0][1] * 0.01: # 0.01 to limit the size of smallest part of th pie
+                    sorted_values = sorted_values[:j]
+                    break
+
             values = [val[1] for val in sorted_values]
             
             labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in sorted_values]
-            axis.pie(values, explode=None, labels=labels,
-                colors=_colors,
-                autopct=None, pctdistance=0.6, shadow=False,
-                labeldistance=1.1, startangle=None, radius=None,
-                counterclock=True, wedgeprops=None, textprops=None)
+            axis.pie(values, labels=labels, colors=_colors)
             axis.set_title('%s %s' % (self.GRAPHS[graph]['title'], 'Top %i' % TOP_N_VALUES))
 
         img_file = NamedTemporaryFile(prefix='pg_annotate', suffix='.png').name
