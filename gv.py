@@ -91,7 +91,7 @@ class GV:
             <TD ALIGN="left" BGCOLOR="{color}">{errors}</TD>
         </TR>""".format(name=name,
                         color=color,
-                        sizes='/'.join(sizes),
+                        sizes='/'.join([str(n) for n in sizes]),
                         errors=', '.join(errors))
         print(table)
 
@@ -150,9 +150,16 @@ class GV:
         print("%s:%s1:e -> %s:%s:w;" % (src[0], GV_SEPARATOR.join(src),
                                     dst[0], GV_SEPARATOR.join(dst)))
 
+    def add_missing_constraint(self, table, column, other_table, error):
+        print('%s:%s1:e -> %s:s [label="%s" fontcolor="red", color="red"];' % (table, GV_SEPARATOR.join([table, column]),
+                                    other_table, error))
+
     def add_inherited(self, src, dst):
         # :s for the South side of the table
-        print('%s:s -> %s:%s [label="inherits" fontcolor=red color=red];' % (dst, src, src))
+        print('%s:s -> %s:%s [label="inherits" fontcolor=limegreen color=limegreen];' % (dst, src, src))
+
+    def add_duplicate(self, src, dst, duplicate_type):
+        print('%s:s -> %s:%s [label="%s" fontcolor=red color=red];' % (src, dst, dst, ', '.join(duplicate_type)))
 
     def add_footer(self):
         print(GV_FOOTER)
