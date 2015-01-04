@@ -65,7 +65,7 @@ class DB:
                 elif not is_bool:
                     if len(res) == 2:
                         col.errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                    elif len(res) < MIN_TABLE_SIZE and not isinstance(col.type, Enum):
+                    elif sizes[4] >= 2 * MIN_TABLE_SIZE and len(res) < MIN_TABLE_SIZE and not isinstance(col.type, Enum):
                         col.errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
             columns.append(col)
         return columns
