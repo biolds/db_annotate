@@ -1,5 +1,5 @@
 Requirement:
-aptitude install python3-{psycopg2,matplotlib}
+aptitude install python3-{psycopg2,matplotlib,sqlalchemy}
 
 Run:
 ./main.py dbname=db_name user=username password=password host=localhost | dot -Tpng -o output.png
