@@ -16,6 +16,7 @@ if __name__ == '__main__':
         print(e, file=sys.stderr)
         print('Syntax: %s DATABASE_URI' % sys.argv[0], file=sys.stderr)
         print('For example mysql://username:password@hostname/database', file=sys.stderr)
+        print('            postgresql://username:password@hostname/database', file=sys.stderr)
         sys.exit(1)
 
     gv = GV()
