@@ -36,7 +36,7 @@ class DB:
             group = stringsByPrefix.setdefault(prefix, [])
             group.append(string)
 
-        for namespace, tables in stringsByPrefix.items():
+        for namespace, tables in list(stringsByPrefix.items()):
             if len(tables) <= 1:
                 stringsByPrefix.pop(namespace)
         return stringsByPrefix
@@ -62,21 +62,19 @@ class DB:
             type_ = col.type
 
             if hasattr(col, 'length'):
-                length = col['type'].length
+                length = col.length
             else:
                 length = None
 
             errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
-                res = session.query(name, func.count(name)).select_from(table).group_by(name).limit(MIN_TABLE_SIZE+1).all()
+                res = session.query(col, func.count(col)).select_from(table).group_by(col).limit(MIN_TABLE_SIZE).all()
                 if len(res) == 1 and res[0][1] > 1:
                     errors.append('value is always "%s"' % res[0][0])
                 elif len(res) == 2 and isinstance(type_, Boolean):
                     errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                elif len(res) > MIN_TABLE_SIZE and isinstance(type_, Enum):
-                    lines_count = sum([r[1] for r in res])
-                    if lines_count > MIN_TABLE_SIZE:
-                        errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
+                elif len(res) < MIN_TABLE_SIZE and not isinstance(type_, Enum):
+                    errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
             columns.append((name, type_, length, col.nullable, col.default, col.unique, errors))
         return columns
 
@@ -122,7 +120,7 @@ class DB:
                                 if other_pattern_prefix + column + other_pattern == \
                                         other_table + pattern:
                                     constraints = self.get_foreign_keys(table)
-                                    missings.append((table, column, other_table, 'missing constraint\nor ambiguous naming'))
+                                    missings.append((table, column, other_table, 'missing constraint or ambiguous naming'))
                                     raise LoopBreak
             except LoopBreak:
                 pass
