@@ -45,9 +45,6 @@ class DB:
         return [col['name'] for col in self.inspector.get_columns(table)]
 
     def get_columns(self, table_name):
-        """
-        Return value: [(name, type, nullable, default, unique, [errors])]
-        """
         columns = []
         sizes = self.get_table_size(table_name)
         session = self.Session()
@@ -57,25 +54,20 @@ class DB:
         self.inspector.reflecttable(table, None)
 
         for col in table.columns:
-            name = col.name
-            type_ = col.type
+            # XXX hack to work with mysql which doesn't have a real 'boolean' type
+            is_bool = isinstance(col.type, Boolean) or (isinstance(col.type, Integer) and getattr(col.type, 'display_width', None) == 1)
 
-            if hasattr(type_, 'display_width'):
-                length = type_.display_width
-            else:
-                length = None
-
-            errors = []
+            col.errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
                 res = session.query(col, func.count(col)).select_from(table).group_by(col).limit(MIN_TABLE_SIZE).all()
                 if len(res) == 1 and res[0][1] > 1:
-                    errors.append('value is always "%s"' % res[0][0])
-                elif not isinstance(type_, Boolean) and (not isinstance(type_, Integer) or not length == 1):
+                    col.errors.append('value is always "%s"' % res[0][0])
+                elif not is_bool:
                     if len(res) == 2:
-                        errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                    elif len(res) < MIN_TABLE_SIZE and not isinstance(type_, Enum):
-                        errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
-            columns.append((name, type_, col.nullable, col.default, col.unique, errors))
+                        col.errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
+                    elif len(res) < MIN_TABLE_SIZE and not isinstance(col.type, Enum):
+                        col.errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
+            columns.append(col)
         return columns
 
     def get_table_keys(self, table):

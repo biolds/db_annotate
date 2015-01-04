@@ -97,38 +97,24 @@ class GV:
                         errors=', '.join(errors))
         print(table)
 
-        for column in columns:
-            column, data_type, nullable, default, unique, col_errors = column
-            col_id = ''
-
-            col_id += "%s%s%s" % (name, GV_SEPARATOR, column)
-            color = 'gray'
-
-            has_index = ''
-            if column in keys:
-                color = 'limegreen'
-            if column in indexes:
-                has_index = '*'
-            if not nullable:
-                nullable = '*'
-            else:
-                nullable = ''
-            if unique:
-                unique = '*'
-            else:
-                unique = ''
+        for col in columns:
+            col_id = "%s%s%s" % (name, GV_SEPARATOR, col.name)
+            color = 'limegreen' if col.name in keys else 'gray'
+            has_index = '*' if col.name in indexes else ''
+            not_nullable = '*' if not col.nullable else ''
+            unique = '*' if col.unique else ''
 
             # Data type
-            col_type = str(data_type).lower()
-            if default:
-                if default.startswith('nextval'):
-                    default = 'nextval'
-                col_type += '/def:' + default
+            col_type = str(col.type).lower()
+            if col.default is not None:
+                if col.default.startswith('nextval'):
+                    col.default = 'nextval'
+                col_type += '/def:' + col.default
 
             column = """<TR>
                 <TD ALIGN="left" PORT="{col_id}" BGCOLOR="{color}">{column}</TD>
                 <TD BGCOLOR="{color}">{has_index}</TD>
-                <TD BGCOLOR="{color}">{nullable}</TD>
+                <TD BGCOLOR="{color}">{not_nullable}</TD>
                 <TD BGCOLOR="{color}">{unique}</TD>
                 <TD ALIGN="right" BGCOLOR="{color}">{col_type}</TD>
                 <TD ALIGN="left" BGCOLOR="{error_color}" PORT="{col_id}1" >{error}</TD>
@@ -136,12 +122,12 @@ class GV:
                 'col_id': col_id,
                 'col_type': col_type,
                 'color': color,
-                'column': column,
+                'column': col.name,
                 'has_index': has_index,
                 'unique': unique,
-                'nullable': nullable,
-                'error': ', '.join(col_errors),
-                'error_color': 'firebrick1' if len(col_errors) else color,
+                'not_nullable': not_nullable,
+                'error': ', '.join(col.errors),
+                'error_color': 'firebrick1' if len(col.errors) else color,
             })
             print(column)
         print("</TABLE>>];")
