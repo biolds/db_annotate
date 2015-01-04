@@ -120,7 +120,7 @@ class GV:
 
             # Data type
             col_type = data_type
-            if data_type.startswith('character '):
+            if char_max is not None:
                 col_type += '(%s)' % char_max
             if default:
                 if default.startswith('nextval'):
