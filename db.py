@@ -73,7 +73,7 @@ class DB:
                     errors.append('value is always "%s"' % res[0][0])
                 elif len(res) == 2 and isinstance(type_, Boolean):
                     errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                elif len(res) < MIN_TABLE_SIZE and not isinstance(type_, Enum):
+                elif len(res) > MIN_TABLE_SIZE and not isinstance(type_, Enum):
                     errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
             columns.append((name, type_, length, col.nullable, col.default, col.unique, errors))
         return columns
