@@ -55,4 +55,8 @@ if __name__ == '__main__':
     for tables, duplicate_type in db.get_duplicated_tables().items():
         src, dst = tables.split('/')
         gv.add_duplicate(src, dst, duplicate_type)
+
+    for namespace, tables in db.get_namespaces().items():
+        gv.add_namespace(namespace, tables)
+
     gv.add_footer()

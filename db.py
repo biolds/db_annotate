@@ -26,6 +26,21 @@ class DB:
     def get_tables(self):
         return self.inspector.get_table_names()
 
+    def get_namespaces(self):
+        # Grouping based on http://stackoverflow.com/questions/7852384/finding-multiple-common-starting-strings
+        stringsByPrefix = {}
+        for string in self.get_tables():
+            if '_' not in string:
+                continue
+            prefix, suffix = string.split('_', 1)
+            group = stringsByPrefix.setdefault(prefix, [])
+            group.append(string)
+
+        for namespace, tables in stringsByPrefix.items():
+            if len(tables) <= 1:
+                stringsByPrefix.pop(namespace)
+        return stringsByPrefix
+
     def get_column_names(self, table):
         return [col['name'] for col in self.inspector.get_columns(table)]
 
@@ -78,21 +93,40 @@ class DB:
         return [((table, c['constrained_columns'][0]), (c['referred_table'], c['referred_columns'][0])) for c in self.inspector.get_foreign_keys(table)]
 
     def get_missing_constraints(self, table):
-        constraints = []
+        class LoopBreak(Exception):
+            pass
+        missings = []
+        constraints = self.get_foreign_keys(table)
+        namespaces = self.get_namespaces()
         columns = self.get_column_names(table)
         for other_table in self.get_tables():
             if other_table == table:
                 continue
-            for column in columns:
-                for pattern in ['', 'id', '_id', '_ptr_id']:
-                    for other_pattern in ['', 's']:
-                        if column + other_pattern == other_table + pattern:
-                            constraints.append((table, column, other_table, 'missing constraint\nor ambiguous naming'))
-                            break
-                    else:
+            prefixes = ['']
+            if '_' in other_table:
+                namespace = other_table.split('_', 1)[0]
+                if namespace in namespaces:
+                    prefixes.append(namespace + '_')
+
+            try:
+                for column in columns:
+                    has_constraint = False
+                    for src, dst in constraints:
+                        if (table, column) == src and dst[0] == other_table:
+                            has_constraint = True
+                    if has_constraint:
                         continue
-                    break
-        return constraints
+                    for pattern in ['', 'id', '_id', '_ptr_id']:
+                        for other_pattern_prefix in prefixes:
+                            for other_pattern in ['', 's']:
+                                if other_pattern_prefix + column + other_pattern == \
+                                        other_table + pattern:
+                                    constraints = self.get_foreign_keys(table)
+                                    missings.append((table, column, other_table, 'missing constraint\nor ambiguous naming'))
+                                    raise LoopBreak
+            except LoopBreak:
+                pass
+        return missings
 
     def get_inherited_tables(self):
         # Based on http://stackoverflow.com/questions/1461722/how-to-find-child-tables-that-inherit-from-another-table-in-psql

@@ -168,3 +168,8 @@ class GV:
 
     def add_img(self, filename):
         print('image [label="" image="%s"];' % filename)
+
+    def add_namespace(self, namespace, tables):
+        print('%s [label="%s"];' % (namespace, namespace.title()))
+        for table in tables:
+            print('%s -> %s:%s [style="dashed"];' % (namespace, table, table))
