@@ -44,7 +44,7 @@ class DB:
         for col in self.inspector.get_columns(table_name):
             unique = col['name'] in uniques
             type_name = col['type'].python_type.__name__
-            sql_type = type(col['type']).__name__
+            sql_type = type(col['type']).__name__.lower()
             if hasattr(col['type'], 'length'):
                 length = col['type'].length
             else:
@@ -58,7 +58,7 @@ class DB:
                     errors.append('value is always "%s"' % res[0][0])
                 elif len(res) == 2 and type_name != 'bool':
                     errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                elif len(res) < MIN_TABLE_SIZE and sql_type != 'enumeration':
+                elif len(res) < MIN_TABLE_SIZE and 'enum' not in sql_type:
                     lines_count = sum([r[1] for r in res])
                     if lines_count > MIN_TABLE_SIZE:
                         errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
