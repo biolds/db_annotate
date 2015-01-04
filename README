@@ -2,6 +2,6 @@ Requirement:
 aptitude install python3-{psycopg2,matplotlib,sqlalchemy}
 
 Run:
-./main.py dbname=db_name user=username password=password host=localhost | dot -Tpng -o output.png
+./main.py mysql://username:password@host/database | dot -Tpng -o output.png
 or
-./main.py dbname=db_name user=username password=password host=localhost | neato -Tpng -o output.png
+./main.py postgresql://username:password@host/database | neato -Tpng -o output.png
