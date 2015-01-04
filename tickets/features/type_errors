@@ -1,0 +1,4 @@
+Subject: type check of columns based on their identifier
+----
+"type" columns should have foreignkeys or be integers
+:

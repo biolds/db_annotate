@@ -1,0 +1,5 @@
+Subject: mimetype analysis
+----
+- Show the mimetype of string columns
+- Show an error when a column contains source code
+- Show a warning when a column contains html, xml, json

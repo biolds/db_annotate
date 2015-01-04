@@ -1,0 +1,4 @@
+Subject: Duplicated columns
+----
+- Show an error on multiple columns with the same type, ending with a different number (eg name_1, name_2 columns...)
+- Show an error on duplicated strings in the lines

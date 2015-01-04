@@ -2,5 +2,5 @@ Subject: Support for command line arguments
 ----
 Support commnd line arguments, and add options to:
 - disable namespaces
-- disable big queries
-- enable bigger queries
+- specify analysis of db's data or not
+- specify the min number of lines, unique values count trigger...

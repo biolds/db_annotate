@@ -1,0 +1,4 @@
+Subject: Add an error to columns too big
+----
+- Show an error on columns that have a data type of infinite length
+- Show an error on columns that contain data bigger than XXX octets
