@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
 
 MIN_TABLE_SIZE = 10
 
@@ -16,6 +18,8 @@ class DB:
     def __init__(self, url):
         self.engine = create_engine(url, echo=False, pool_recycle=3600)
         self.inspector = Inspector.from_engine(self.engine)
+        self.Session = sessionmaker()
+        self.Session.configure(bind=self.engine)
 
     def get_tables(self):
         return self.inspector.get_table_names()
@@ -23,14 +27,21 @@ class DB:
     def get_column_names(self, table):
         return [col['name'] for col in self.inspector.get_columns(table)]
 
-    def get_columns(self, table):
+    def get_columns(self, table_name):
         """
         Return value: [(name, type, length, nullable, default, unique, [errors])]
         """
         columns = []
-        uniques = [col['column_names'][0] for col in self.inspector.get_unique_constraints(table)]
-        sizes = self.get_table_size(table)
-        for col in self.inspector.get_columns(table):
+        uniques = [col['column_names'][0] for col in self.inspector.get_unique_constraints(table_name)]
+        sizes = self.get_table_size(table_name)
+
+        session = self.Session()
+
+        # reflect table from db
+        table = Table(table_name, MetaData())
+        self.inspector.reflecttable(table, None)
+
+        for col in self.inspector.get_columns(table_name):
             unique = col['name'] in uniques
             type_name = col['type'].python_type.__name__
             sql_type = type(col['type']).__name__
@@ -41,8 +52,8 @@ class DB:
 
             errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
-                r = self.engine.execute('SELECT %s, COUNT(%s) FROM %s GROUP BY %s LIMIT %s' % (col['name'], col['name'], table, col['name'], MIN_TABLE_SIZE))
-                res = r.fetchall()
+                column = getattr(table.c, col['name'])
+                res = session.query(column, func.count(column)).select_from(table).group_by(column).limit(MIN_TABLE_SIZE+1).all()
                 if len(res) == 1 and res[0][1] > 1:
                     errors.append('value is always "%s"' % res[0][0])
                 elif len(res) == 2 and type_name != 'bool':
