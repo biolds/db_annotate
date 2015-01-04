@@ -98,7 +98,7 @@ class GV:
         print(table)
 
         for column in columns:
-            column, data_type, char_max, nullable, default, unique, col_errors = column
+            column, data_type, nullable, default, unique, col_errors = column
             col_id = ''
 
             col_id += "%s%s%s" % (name, GV_SEPARATOR, column)
@@ -120,8 +120,6 @@ class GV:
 
             # Data type
             col_type = str(data_type).lower()
-            if char_max is not None:
-                col_type += '(%s)' % char_max
             if default:
                 if default.startswith('nextval'):
                     default = 'nextval'

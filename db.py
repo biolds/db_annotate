@@ -5,7 +5,7 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData, Table
 from sqlalchemy.sql import func
-from sqlalchemy.types import Boolean, Enum
+from sqlalchemy.types import Boolean, Enum, Integer
 
 MIN_TABLE_SIZE = 10
 
@@ -46,7 +46,7 @@ class DB:
 
     def get_columns(self, table_name):
         """
-        Return value: [(name, type, length, nullable, default, unique, [errors])]
+        Return value: [(name, type, nullable, default, unique, [errors])]
         """
         columns = []
         sizes = self.get_table_size(table_name)
@@ -60,8 +60,8 @@ class DB:
             name = col.name
             type_ = col.type
 
-            if hasattr(col, 'length'):
-                length = col.length
+            if hasattr(type_, 'display_width'):
+                length = type_.display_width
             else:
                 length = None
 
@@ -70,11 +70,12 @@ class DB:
                 res = session.query(col, func.count(col)).select_from(table).group_by(col).limit(MIN_TABLE_SIZE).all()
                 if len(res) == 1 and res[0][1] > 1:
                     errors.append('value is always "%s"' % res[0][0])
-                elif len(res) == 2 and not isinstance(type_, Boolean):
-                    errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                elif len(res) < MIN_TABLE_SIZE and not isinstance(type_, Enum):
-                    errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
-            columns.append((name, type_, length, col.nullable, col.default, col.unique, errors))
+                elif not isinstance(type_, Boolean) and (not isinstance(type_, Integer) or not length == 1):
+                    if len(res) == 2:
+                        errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
+                    elif len(res) < MIN_TABLE_SIZE and not isinstance(type_, Enum):
+                        errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
+            columns.append((name, type_, col.nullable, col.default, col.unique, errors))
         return columns
 
     def get_table_keys(self, table):
