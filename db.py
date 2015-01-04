@@ -62,10 +62,11 @@ class DB:
                 res = session.query(col, func.count(col)).select_from(table).group_by(col).limit(MIN_TABLE_SIZE).all()
                 if len(res) == 1 and res[0][1] > 1:
                     col.errors.append('value is always "%s"' % res[0][0])
-                elif len(res) == 2 and not is_bool:
-                    col.errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                elif sizes[4] >= MIN_TABLE_SIZE * 2 and len(res) < MIN_TABLE_SIZE and not isinstance(col.type, Enum):
-                    col.errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
+                elif not is_bool:
+                    if len(res) == 2:
+                        col.errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
+                    elif len(res) < MIN_TABLE_SIZE and not isinstance(col.type, Enum):
+                        col.errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
             columns.append(col)
         return columns
 
