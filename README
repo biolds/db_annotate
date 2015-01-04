@@ -1,2 +1,7 @@
+Requirement:
+aptitude install python3-{psycopg2,matplotlib}
+
 Run:
 ./main.py dbname=db_name user=username password=password host=localhost | dot -Tpng -o output.png
+or
+./main.py dbname=db_name user=username password=password host=localhost | neato -Tpng -o output.png
