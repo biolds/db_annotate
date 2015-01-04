@@ -120,7 +120,7 @@ class DB:
                                 if other_pattern_prefix + column + other_pattern == \
                                         other_table + pattern:
                                     constraints = self.get_foreign_keys(table)
-                                    missings.append((table, column, other_table, 'missing constraint or ambiguous naming'))
+                                    missings.append((table, column, other_table, 'missing constraint\\nor ambiguous naming'))
                                     raise LoopBreak
             except LoopBreak:
                 pass
