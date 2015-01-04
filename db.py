@@ -41,7 +41,7 @@ class DB:
 
             errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
-                r = self.engine.execute('SELECT `%s`, COUNT(`%s`) FROM %s GROUP BY `%s` LIMIT %s' % (col['name'], col['name'], table, col['name'], MIN_TABLE_SIZE))
+                r = self.engine.execute('SELECT %s, COUNT(%s) FROM %s GROUP BY %s LIMIT %s' % (col['name'], col['name'], table, col['name'], MIN_TABLE_SIZE))
                 res = r.fetchall()
                 if len(res) == 1 and res[0][1] > 1:
                     errors.append('value is always "%s"' % res[0][0])
