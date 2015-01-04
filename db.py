@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.schema import MetaData, Table
 from sqlalchemy.sql import func
+from sqlalchemy.types import Boolean, Enum
 
 MIN_TABLE_SIZE = 10
 
@@ -32,7 +34,6 @@ class DB:
         Return value: [(name, type, length, nullable, default, unique, [errors])]
         """
         columns = []
-        uniques = [col['column_names'][0] for col in self.inspector.get_unique_constraints(table_name)]
         sizes = self.get_table_size(table_name)
 
         session = self.Session()
@@ -41,28 +42,27 @@ class DB:
         table = Table(table_name, MetaData())
         self.inspector.reflecttable(table, None)
 
-        for col in self.inspector.get_columns(table_name):
-            unique = col['name'] in uniques
-            type_name = col['type'].python_type.__name__
-            sql_type = type(col['type']).__name__.lower()
-            if hasattr(col['type'], 'length'):
+        for col in table.columns:
+            name = col.name
+            type_ = col.type
+
+            if hasattr(col, 'length'):
                 length = col['type'].length
             else:
                 length = None
 
             errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
-                column = getattr(table.c, col['name'])
-                res = session.query(column, func.count(column)).select_from(table).group_by(column).limit(MIN_TABLE_SIZE+1).all()
+                res = session.query(name, func.count(name)).select_from(table).group_by(name).limit(MIN_TABLE_SIZE+1).all()
                 if len(res) == 1 and res[0][1] > 1:
                     errors.append('value is always "%s"' % res[0][0])
-                elif len(res) == 2 and type_name != 'bool':
+                elif len(res) == 2 and isinstance(type_, Boolean):
                     errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
-                elif len(res) < MIN_TABLE_SIZE and 'enum' not in sql_type:
+                elif len(res) > MIN_TABLE_SIZE and isinstance(type_, Enum):
                     lines_count = sum([r[1] for r in res])
                     if lines_count > MIN_TABLE_SIZE:
                         errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
-            columns.append((col['name'], sql_type, length, col['nullable'], col['default'], unique, errors))
+            columns.append((name, type_, length, col.nullable, col.default, col.unique, errors))
         return columns
 
     def get_table_keys(self, table):
@@ -84,7 +84,6 @@ class DB:
             if other_table == table:
                 continue
             for column in columns:
-                #print('other_table:', other_table)
                 for pattern in ['', 'id', '_id', '_ptr_id']:
                     for other_pattern in ['', 's']:
                         if column + other_pattern == other_table + pattern:
@@ -93,7 +92,6 @@ class DB:
                     else:
                         continue
                     break
-        #print('constraints:', constraints)
         return constraints
 
     def get_inherited_tables(self):
