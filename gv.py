@@ -106,10 +106,11 @@ class GV:
 
             # Data type
             col_type = str(col.type).lower()
-            if col.default is not None:
-                if col.default.startswith('nextval'):
-                    col.default = 'nextval'
-                col_type += '/def:' + col.default
+            if col.server_default is not None:
+                default = str(col.server_default.arg)
+                if default.startswith('nextval'):
+                    default = 'nextval'
+                col_type += '/def:' + default
 
             column = """<TR>
                 <TD ALIGN="left" PORT="{col_id}" BGCOLOR="{color}">{column}</TD>
