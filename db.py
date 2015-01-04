@@ -55,7 +55,10 @@ class DB:
         return columns
 
     def get_table_keys(self, table):
-        return [fk['constrained_columns'][0] for fk in self.inspector.get_foreign_keys(table)]
+        keys = [k['constrained_columns'][0] for k in \
+                    self.inspector.get_foreign_keys(table)]
+        keys += self.inspector.get_pk_constraint(table)['constrained_columns']
+        return keys
 
     def get_table_index(self, table):
         return [idx['column_names'][0] for idx in self.inspector.get_indexes(table)]
