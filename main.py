@@ -7,15 +7,15 @@ from gv import GV
 from db import DB
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Syntax: %s DATABASE_URI' % sys.argv[0], file=sys.stderr)
-        print('For example mysql://username:password@hostname/database', file=sys.stderr)
-        sys.exit(1)
-
     try:
+        if len(sys.argv) < 2:
+            raise Exception('Invalid URI')
+
         db = DB(sys.argv[1])
     except Exception as e:
         print(e, file=sys.stderr)
+        print('Syntax: %s DATABASE_URI' % sys.argv[0], file=sys.stderr)
+        print('For example mysql://username:password@hostname/database', file=sys.stderr)
         sys.exit(1)
 
     gv = GV()
