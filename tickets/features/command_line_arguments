@@ -1,0 +1,4 @@
+Subject: Support for command line arguments
+----
+Support commnd line arguments:
+- add an option to disable namespaces

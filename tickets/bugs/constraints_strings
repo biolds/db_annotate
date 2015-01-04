@@ -1,0 +1,3 @@
+Subject: Missing constraints on strings 
+-----
+Some strings are marked has missing a constraint, the type of the column should be checked as well.
