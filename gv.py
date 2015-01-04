@@ -119,7 +119,7 @@ class GV:
                 unique = ''
 
             # Data type
-            col_type = data_type
+            col_type = data_type.lower()
             if char_max is not None:
                 col_type += '(%s)' % char_max
             if default:
