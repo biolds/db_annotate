@@ -109,7 +109,7 @@ class GV:
                 color = 'limegreen'
             if column in indexes:
                 has_index = '*'
-            if nullable == 'NO':
+            if not nullable:
                 nullable = '*'
             else:
                 nullable = ''

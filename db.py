@@ -28,7 +28,7 @@ class DB:
         Return value: [(name, type, length, nullable, default, unique, [errors])]
         """
         columns = []
-        uniques = self.inspector.get_unique_constraints(table)
+        uniques = [col['column_names'][0] for col in self.inspector.get_unique_constraints(table)]
         sizes = self.get_table_size(table)
         for col in self.inspector.get_columns(table):
             unique = col['name'] in uniques
