@@ -50,7 +50,6 @@ class DB:
         """
         columns = []
         sizes = self.get_table_size(table_name)
-
         session = self.Session()
 
         # reflect table from db
@@ -71,7 +70,7 @@ class DB:
                 res = session.query(col, func.count(col)).select_from(table).group_by(col).limit(MIN_TABLE_SIZE).all()
                 if len(res) == 1 and res[0][1] > 1:
                     errors.append('value is always "%s"' % res[0][0])
-                elif len(res) == 2 and isinstance(type_, Boolean):
+                elif len(res) == 2 and not isinstance(type_, Boolean):
                     errors.append('value is always "%s" or "%s"' % (res[0][0], res[1][0]))
                 elif len(res) < MIN_TABLE_SIZE and not isinstance(type_, Enum):
                     errors.append('has less than %s distinct values' % MIN_TABLE_SIZE)
