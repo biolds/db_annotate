@@ -56,7 +56,10 @@ if __name__ == '__main__':
         src, dst = tables.split('/')
         gv.add_duplicate(src, dst, duplicate_type)
 
-    for namespace, tables in db.get_namespaces().items():
-        gv.add_namespace(namespace, tables)
+    namespaces = db.get_namespaces().items()
+    if len(namespaces) != 1:
+        # Show namespaces only when there are more than one
+        for namespace, tables in namespaces:
+            gv.add_namespace(namespace, tables)
 
     gv.add_footer()
