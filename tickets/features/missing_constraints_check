@@ -1,0 +1,4 @@
+Subject: Option to check missing constraints values
+----
+There should be an option to check columns marked as "missing constraints",
+to check that their content references data from the other table.

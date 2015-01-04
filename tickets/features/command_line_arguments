@@ -1,4 +1,6 @@
 Subject: Support for command line arguments
 ----
-Support commnd line arguments:
-- add an option to disable namespaces
+Support commnd line arguments, and add options to:
+- disable namespaces
+- disable big queries
+- enable bigger queries
