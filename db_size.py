@@ -5,6 +5,7 @@ from matplotlib import colors
 from matplotlib.cm import get_cmap, ScalarMappable
 from matplotlib.pyplot import figure, savefig
 
+from output_file import OutputFile
 
 FIG_BASE_SIZE = 4
 TOP_N_VALUES = 10
@@ -26,7 +27,7 @@ def humanize(s, counter_type):
     return str(int(s)) + prefix + counter_type
 
 
-class DBSize:
+class DBSize(OutputFile):
     GRAPHS = OrderedDict(((
         'tables', {
             'title': 'Tables sizes (w/o indices)',
@@ -46,7 +47,8 @@ class DBSize:
         }),
     ))
 
-    def __init__(self):
+    def __init__(self, filename):
+        super(DBSize, self).__init__(filename)
         self.tables_size = {}
         self.total_size = {}
         self.lines_count_size = {}
@@ -87,6 +89,4 @@ class DBSize:
             axis.pie(values, labels=labels, colors=_colors)
             axis.set_title('%s %s' % (self.GRAPHS[graph]['title'], 'Top %i' % TOP_N_VALUES))
 
-        img_file = NamedTemporaryFile(prefix='pg_annotate', suffix='.png').name
-        savefig(img_file)
-        return img_file
+        savefig(self.filename)

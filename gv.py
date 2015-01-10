@@ -1,3 +1,5 @@
+from output_file import OutputFile
+
 GV_HEADER = """
 digraph G {
     overlap = scale;
@@ -71,10 +73,13 @@ GV_FOOTER = """
 """
 GV_SEPARATOR = '__42deadbeef__'
 
-class GV:
-    def __init__(self):
+class GV(OutputFile):
+    def __init__(self, filename):
+        super(GV, self).__init__(filename)
         self.tables = {}
-        print(GV_HEADER)
+
+    def add_header(self):
+        self.write(GV_HEADER)
 
     def add_table(self, name, errors, sizes, keys, indexes, columns):
         sizes = sizes[:2] + [sizes[4]]
@@ -95,7 +100,7 @@ class GV:
                         color=color,
                         sizes='/'.join([str(n) for n in sizes]),
                         errors=', '.join(errors))
-        print(table)
+        self.write(table)
 
         for col in columns:
             col_id = "%s%s%s" % (name, GV_SEPARATOR, col.name)
@@ -130,31 +135,28 @@ class GV:
                 'error': ', '.join(col.errors),
                 'error_color': 'firebrick1' if len(col.errors) else color,
             })
-            print(column)
-        print("</TABLE>>];")
+            self.write(column)
+        self.write("</TABLE>>];")
 
     def add_constraint(self, src, dst):
-        print("%s:%s1:e -> %s:%s:w;" % (src[0], GV_SEPARATOR.join(src),
+        self.write("%s:%s1:e -> %s:%s:w;" % (src[0], GV_SEPARATOR.join(src),
                                     dst[0], GV_SEPARATOR.join(dst)))
 
     def add_missing_constraint(self, table, column, other_table, error):
-        print('%s:%s1:e -> %s [label="%s" fontcolor="red", color="red"];' % (table, GV_SEPARATOR.join([table, column]),
+        self.write('%s:%s1:e -> %s [label="%s" fontcolor="red", color="red"];' % (table, GV_SEPARATOR.join([table, column]),
                                     other_table, error))
 
     def add_inherited(self, src, dst):
         # :s for the South side of the table
-        print('%s -> %s:%s [label="inherits" fontcolor=limegreen color=limegreen];' % (dst, src, src))
+        self.write('%s -> %s:%s [label="inherits" fontcolor=limegreen color=limegreen];' % (dst, src, src))
 
     def add_duplicate(self, src, dst, duplicate_type):
-        print('%s -> %s:%s [label="%s" fontcolor=red color=red];' % (src, dst, dst, ', '.join(duplicate_type)))
+        self.write('%s -> %s:%s [label="%s" fontcolor=red color=red];' % (src, dst, dst, ', '.join(duplicate_type)))
 
     def add_footer(self):
-        print(GV_FOOTER)
-
-    def add_img(self, filename):
-        print('image [label="" image="%s"];' % filename)
+        self.write(GV_FOOTER)
 
     def add_namespace(self, namespace, tables):
-        print('%s [label="%s"];' % (namespace, namespace.title()))
+        self.write('%s [label="%s"];' % (namespace, namespace.title()))
         for table in tables:
-            print('%s -> %s:%s [style="dashed"];' % (namespace, table, table))
+            self.write('%s -> %s:%s [style="dashed"];' % (namespace, table, table))
