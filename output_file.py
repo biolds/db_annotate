@@ -15,8 +15,9 @@ class OutputFile:
             self.fd = open(self.filename, 'w')
         self.fd.write(buf)
 
-    def exists(self):
-        exists = os.path.exists(self.filename)
+    def exists(self, filename=None):
+        filename = filename or self.filename
+        exists = os.path.exists(filename)
         if exists:
-            print("Warning: file %s already exists. Remove it first to rebuild it." % self.filename)
+            print("Warning: file %s already exists. Remove it first to rebuild it." % filename)
         return exists

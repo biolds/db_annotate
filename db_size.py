@@ -1,13 +1,13 @@
 from collections import OrderedDict
-from tempfile import NamedTemporaryFile
+import copy
+import os
 
 from matplotlib import colors
 from matplotlib.cm import get_cmap, ScalarMappable
 from matplotlib.pyplot import figure, savefig
 
-from output_file import OutputFile
+from output_file import OutputFile, OUTPUT_DIR
 
-FIG_BASE_SIZE = 4
 TOP_N_VALUES = 10
 
 
@@ -28,13 +28,20 @@ def humanize(s, counter_type):
 
 
 class DBSize(OutputFile):
+    # Size of the image in pixels
+    IMG_SIZE = (600, 600)
+    FIG_SIZE = (IMG_SIZE[0] / 100, IMG_SIZE[1] / 100)
+
+    # Size of the pie in the image in %
+    PIE_SIZE = 0.4
+
     GRAPHS = OrderedDict(((
-        'tables', {
-            'title': 'Tables sizes (w/o indices)',
-            'counter_type': 'b',
-        }), (
         'total', {
             'title': 'Total tables sizes',
+            'counter_type': 'b',
+        }), (
+        'tables', {
+            'title': 'Tables sizes (w/o indices)',
             'counter_type': 'b',
         }), (
         'lines_count', {
@@ -47,12 +54,15 @@ class DBSize(OutputFile):
         }),
     ))
 
-    def __init__(self, filename):
-        super(DBSize, self).__init__(filename)
+    def __init__(self):
+        super(DBSize, self).__init__('total-0.png')
         self.tables_size = {}
         self.total_size = {}
         self.lines_count_size = {}
         self.mean_lines_size = {}
+
+    def _get_filename(self, base, n):
+        return os.path.join(OUTPUT_DIR, '%s-%i.png' % (base, n))
 
     def add_table(self, table, sizes):
         sizes = [int(s) for s in sizes[2:]]
@@ -65,28 +75,49 @@ class DBSize(OutputFile):
         else:
             self.mean_lines_size[table] = sizes[1] / float(sizes[2])
 
-    def render(self):
-        fig = figure(figsize=(FIG_BASE_SIZE * 2, FIG_BASE_SIZE * len(self.GRAPHS)))
+    def _render_pie(self, values, labels, _colors, title, filename):
+        fig = figure(figsize=self.FIG_SIZE)
+        axis = fig.add_axes([self.PIE_SIZE / 2.0, self.PIE_SIZE / 2.0, self.PIE_SIZE, self.PIE_SIZE])
+        axis.pie(values, labels=labels, colors=_colors)
+        axis.set_title(title)
+        savefig(filename)
 
+    def render(self):
         _colors = ScalarMappable(norm=colors.Normalize(vmin=0, vmax=TOP_N_VALUES + 0.5), cmap=get_cmap('jet'))
         _colors = _colors.to_rgba(range(TOP_N_VALUES))
         _colors = list(reversed(_colors))
 
         for i, graph in enumerate(self.GRAPHS.keys()):
-            graph_len = float(len(self.GRAPHS))
-            axis = fig.add_axes([0.25, (int(graph_len) - 1 - i) / graph_len, 0.5 * 0.9, 0.9 * (1 / graph_len)])
+            # Add the total size pies
             tables = getattr(self, graph + '_size')
-            sorted_values = list(((k, tables[k]) for k in sorted(tables, key=tables.get, reverse=True)))[:TOP_N_VALUES]
+            sorted_values = list(((k, tables[k]) for k in sorted(tables, key=tables.get, reverse=True)))
 
-            for j, val in enumerate(sorted_values):
-                if val[1] < sorted_values[0][1] * 0.01: # 0.01 to limit the size of smallest part of th pie
-                    sorted_values = sorted_values[:j]
-                    break
+            filename = self._get_filename(graph, i)
+            if not self.exists(filename):
+                # Totals graphs
+                total_values = copy.copy(sorted_values[:TOP_N_VALUES])
+                for j, val in enumerate(total_values):
+                    if val[1] < sorted_values[0][1] * 0.01: # 0.01 to limit the size of smallest part of the pie
+                        total_values = sorted_values[:j]
+                        break
 
-            values = [val[1] for val in sorted_values]
-            
-            labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in sorted_values]
-            axis.pie(values, labels=labels, colors=_colors)
-            axis.set_title('%s %s' % (self.GRAPHS[graph]['title'], 'Top %i' % TOP_N_VALUES))
+                values = [val[1] for val in total_values]
+                labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in total_values]
+                title = '%s %s' % (self.GRAPHS[graph]['title'], 'Total Top %i' % TOP_N_VALUES)
+                self._render_pie(values, labels, _colors, title, filename)
 
-        savefig(self.filename)
+            def grouped(iterable, n):
+                "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
+                return zip(*[iter(iterable)]*n)
+
+            # Other graphs
+            groups = list(grouped(sorted_values, TOP_N_VALUES))
+            for j, values in enumerate(groups):
+                filename = self._get_filename(graph + str(i), j)
+                if self.exists(filename):
+                    continue
+                values = [val for val in values if val[1] != 0]
+                _values = [val[1] for val in values]
+                labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in values]
+                title = '%s %s' % (self.GRAPHS[graph]['title'], 'All %i/%i' % (j + 1, len(groups)))
+                self._render_pie(_values, labels, _colors, title, filename)

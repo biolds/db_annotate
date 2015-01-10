@@ -22,14 +22,13 @@ if __name__ == '__main__':
         sys.exit(1)
 
     gv = GV('relationship.gv')
-    db_size = DBSize('tables_size.png')
+    db_size = DBSize()
 
     # DB size pies
-    if not db_size.exists():
-        for table in db.get_tables():
-            sizes = db.get_table_size(table)
-            db_size.add_table(table, sizes)
-        db_size.render()
+    for table in db.get_tables():
+        sizes = db.get_table_size(table)
+        db_size.add_table(table, sizes)
+    db_size.render()
 
     # Tables
     if not gv.exists():
