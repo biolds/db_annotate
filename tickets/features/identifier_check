@@ -1,0 +1,4 @@
+Subject: Identifiers's type should be checked
+----
+Check *id, *_id, *_ptr_id columns are integers, non-null, with an index
+Check date_*, *_date use a date object
