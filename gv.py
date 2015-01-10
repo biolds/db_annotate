@@ -157,6 +157,6 @@ class GV(OutputFile):
         self.write(GV_FOOTER)
 
     def add_namespace(self, namespace, tables):
-        self.write('%s [label="%s"];' % (namespace, namespace.title()))
+        self.write('%s [label="%s", shape=square, fontsize=64];' % (namespace, namespace.title()))
         for table in tables:
             self.write('%s -> %s:%s [style="dashed"];' % (namespace, table, table))
