@@ -5,11 +5,6 @@ import os
 from pygal import Pie, Config
 from pygal.style import SolidColorStyle
 
-
-from matplotlib import colors
-from matplotlib.cm import get_cmap, ScalarMappable
-from matplotlib.pyplot import figure, savefig
-
 from output_file import OutputFile, OUTPUT_DIR
 
 TOP_N_VALUES = 10
@@ -66,9 +61,12 @@ class DBSize(OutputFile):
         self.mean_lines_size = {}
         self.pygal_config = Config()
         self.pygal_config.human_readable = True
+        self.pygal_config.legend_box_size = 24
         self.pygal_config.show_legend = True
         self.pygal_config.show_values = True
         self.pygal_config.style = SolidColorStyle
+        self.pygal_config.style.colors = ['#ff3000', '#ff8900', '#ffe500', \
+            '#b7ff3f', '#66ff90', '#18ffdd', '#00a4ff', '#0040ff', '#0000ec', '#00007f']
         self.pygal_config.truncate_labels = 9999999
         self.pygal_config.truncate_legend = 9999999
 
@@ -86,7 +84,7 @@ class DBSize(OutputFile):
         else:
             self.mean_lines_size[table] = sizes[1] / float(sizes[2])
 
-    def _render_pie(self, values, labels, _colors, title, filename):
+    def _render_pie(self, values, labels, title, filename):
         pie_chart = Pie(config=self.pygal_config)
         pie_chart.title = title
         for label, val in zip(labels, values):
@@ -94,9 +92,6 @@ class DBSize(OutputFile):
         pie_chart.render_to_file(filename)
 
     def render(self):
-        _colors = ScalarMappable(norm=colors.Normalize(vmin=0, vmax=TOP_N_VALUES + 0.5), cmap=get_cmap('jet'))
-        _colors = _colors.to_rgba(range(TOP_N_VALUES))
-        _colors = list(reversed(_colors))
         imgs = []
 
         for i, graph in enumerate(self.GRAPHS.keys()):
@@ -117,7 +112,7 @@ class DBSize(OutputFile):
 
                 values = [val[1] for val in total_values]
                 labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in total_values]
-                self._render_pie(values, labels, _colors, title, filename)
+                self._render_pie(values, labels, title, filename)
 
             def grouped(iterable, n):
                 "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
@@ -134,5 +129,5 @@ class DBSize(OutputFile):
                 values = [val for val in values if val[1] != 0]
                 _values = [val[1] for val in values]
                 labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in values]
-                self._render_pie(_values, labels, _colors, title, filename)
+                self._render_pie(_values, labels, title, filename)
         return imgs
