@@ -86,6 +86,7 @@ class DBSize(OutputFile):
         _colors = ScalarMappable(norm=colors.Normalize(vmin=0, vmax=TOP_N_VALUES + 0.5), cmap=get_cmap('jet'))
         _colors = _colors.to_rgba(range(TOP_N_VALUES))
         _colors = list(reversed(_colors))
+        imgs = []
 
         for i, graph in enumerate(self.GRAPHS.keys()):
             # Add the total size pies
@@ -93,6 +94,8 @@ class DBSize(OutputFile):
             sorted_values = list(((k, tables[k]) for k in sorted(tables, key=tables.get, reverse=True)))
 
             filename = self._get_filename(graph, i)
+            title = '%s %s' % (self.GRAPHS[graph]['title'], 'Total Top %i' % TOP_N_VALUES)
+            imgs.append({'title': title, 'filename':filename})
             if not self.exists(filename):
                 # Totals graphs
                 total_values = copy.copy(sorted_values[:TOP_N_VALUES])
@@ -103,7 +106,6 @@ class DBSize(OutputFile):
 
                 values = [val[1] for val in total_values]
                 labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in total_values]
-                title = '%s %s' % (self.GRAPHS[graph]['title'], 'Total Top %i' % TOP_N_VALUES)
                 self._render_pie(values, labels, _colors, title, filename)
 
             def grouped(iterable, n):
@@ -114,10 +116,12 @@ class DBSize(OutputFile):
             groups = list(grouped(sorted_values, TOP_N_VALUES))
             for j, values in enumerate(groups):
                 filename = self._get_filename(graph + str(i), j)
+                title = '%s %s' % (self.GRAPHS[graph]['title'], 'All %i/%i' % (j + 1, len(groups)))
+                imgs.append({'title': title, 'filename':filename})
                 if self.exists(filename):
                     continue
                 values = [val for val in values if val[1] != 0]
                 _values = [val[1] for val in values]
                 labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in values]
-                title = '%s %s' % (self.GRAPHS[graph]['title'], 'All %i/%i' % (j + 1, len(groups)))
                 self._render_pie(_values, labels, _colors, title, filename)
+        return imgs

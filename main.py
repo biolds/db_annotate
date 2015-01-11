@@ -2,10 +2,14 @@
 
 import os
 import sys
+import subprocess
 
-from db_size import DBSize
-from gv import GV
 from db import DB
+from db_size import DBSize
+from dot import DotFile
+from gv import GV
+from html import HtmlFile
+from output_file import OutputFile
 
 
 if __name__ == '__main__':
@@ -21,6 +25,8 @@ if __name__ == '__main__':
         print('            postgresql://username:password@hostname/database', file=sys.stderr)
         sys.exit(1)
 
+    OutputFile.create_outputdir()
+
     gv = GV('relationship.gv')
     db_size = DBSize()
 
@@ -28,7 +34,7 @@ if __name__ == '__main__':
     for table in db.get_tables():
         sizes = db.get_table_size(table)
         db_size.add_table(table, sizes)
-    db_size.render()
+    imgs = db_size.render()
 
     # Tables
     if not gv.exists():
@@ -45,7 +51,6 @@ if __name__ == '__main__':
         for table in db.get_tables():
             for src, dst in db.get_foreign_keys(table):
                 gv.add_constraint(src, dst)
-
         # Missing constraints
         for table in db.get_tables():
             for constraint in db.get_missing_constraints(table):
@@ -66,3 +71,11 @@ if __name__ == '__main__':
                 gv.add_namespace(namespace, tables)
 
         gv.add_footer()
+
+    gv.close()
+    dot = DotFile('relationship.png')
+    dot.render(gv.filename)
+
+    # Generate HTML files
+    html_file = HtmlFile('index.html')
+    html_file.render(imgs)
