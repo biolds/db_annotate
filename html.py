@@ -22,6 +22,6 @@ class HtmlFile(OutputFile):
         self.write(HTML_BODY % self.filename)
         for obj in objects:
             obj['url'] = os.path.basename(obj['filename'])
-            self.write('<h1>%s</h1><img src="%s"></img>'
-                    % (obj['title'], obj['url']))
+            self.write('<figure><embed type="image/svg+xml" src="%s" width="50%%" height="50%%"/></figure>'
+                    % obj['url'])
         self.write(HTML_FOOTER)

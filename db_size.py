@@ -2,6 +2,10 @@ from collections import OrderedDict
 import copy
 import os
 
+from pygal import Pie, Config
+from pygal.style import SolidColorStyle
+
+
 from matplotlib import colors
 from matplotlib.cm import get_cmap, ScalarMappable
 from matplotlib.pyplot import figure, savefig
@@ -60,9 +64,16 @@ class DBSize(OutputFile):
         self.total_size = {}
         self.lines_count_size = {}
         self.mean_lines_size = {}
+        self.pygal_config = Config()
+        self.pygal_config.human_readable = True
+        self.pygal_config.show_legend = True
+        self.pygal_config.show_values = True
+        self.pygal_config.style = SolidColorStyle
+        self.pygal_config.truncate_labels = 9999999
+        self.pygal_config.truncate_legend = 9999999
 
     def _get_filename(self, base, n):
-        return os.path.join(OUTPUT_DIR, '%s-%i.png' % (base, n))
+        return os.path.join(OUTPUT_DIR, '%s-%i.svg' % (base, n))
 
     def add_table(self, table, sizes):
         sizes = [int(s) for s in sizes[2:]]
@@ -76,11 +87,11 @@ class DBSize(OutputFile):
             self.mean_lines_size[table] = sizes[1] / float(sizes[2])
 
     def _render_pie(self, values, labels, _colors, title, filename):
-        fig = figure(figsize=self.FIG_SIZE)
-        axis = fig.add_axes([self.PIE_SIZE / 2.0, self.PIE_SIZE / 2.0, self.PIE_SIZE, self.PIE_SIZE])
-        axis.pie(values, labels=labels, colors=_colors)
-        axis.set_title(title)
-        savefig(filename)
+        pie_chart = Pie(config=self.pygal_config)
+        pie_chart.title = title
+        for label, val in zip(labels, values):
+            pie_chart.add(label, val)
+        pie_chart.render_to_file(filename)
 
     def render(self):
         _colors = ScalarMappable(norm=colors.Normalize(vmin=0, vmax=TOP_N_VALUES + 0.5), cmap=get_cmap('jet'))

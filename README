@@ -1,7 +1,26 @@
-Requirement:
-aptitude install python3-{psycopg2,matplotlib,sqlalchemy}
+Debian packages requirements:
+aptitude install graphviz python3-{psycopg2,matplotlib,sqlalchemy}
+
+Download Pygal (https://github.com/Kozea/pygal.git)
 
 Run:
-./main.py mysql://username:password@host/database | dot -Tpng -o output.png
+Eventually use the PYTHONPATH variable to use Pygal:
+
+::
+
+    $ export PYTHONPATH=/path/to/pygal/
+
+Then run the script:
+
+::
+
+    $ ./main.py mysql://username:password@host/database
+
 or
-./main.py postgresql://username:password@host/database | neato -Tpng -o output.png
+
+::
+
+    $ ./main.py postgresql://username:password@host/database
+
+
+The output will be available in the db_annotate/ directory under the current working directory.
