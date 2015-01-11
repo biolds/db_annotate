@@ -67,7 +67,9 @@ class DBSize(OutputFile):
         self.pygal_config.style = SolidColorStyle
         self.pygal_config.style.colors = ['#ff3000', '#ff8900', '#ffe500', \
             '#b7ff3f', '#66ff90', '#18ffdd', '#00a4ff', '#0040ff', '#0000ec', '#00007f']
-        self.pygal_config.truncate_labels = 9999999
+        self.pygal_config.style.opacity = '.9'
+        self.pygal_config.style.opacity_hover = '.4'
+        self.pygal_config.style.transition = '100ms ease-in'
         self.pygal_config.truncate_legend = 9999999
 
     def _get_filename(self, base, n):
