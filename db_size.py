@@ -128,7 +128,6 @@ class DBSize(OutputFile):
                 imgs.append({'title': title, 'filename':filename})
                 if self.exists(filename):
                     continue
-                values = [val for val in values if val[1] != 0]
                 _values = [val[1] for val in values]
                 labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in values]
                 self._render_pie(_values, labels, title, filename)
