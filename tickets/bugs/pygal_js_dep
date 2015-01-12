@@ -1,0 +1,4 @@
+Subject: Pygal import's its js from github
+----
+Svg files generated with pygal import their javascript from the Github website.
+They should instead be copied from the currently installed version, to make it really static.
