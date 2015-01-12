@@ -103,7 +103,7 @@ class DBSize(OutputFile):
 
             filename = self._get_filename(graph, i)
             title = '%s %s' % (self.GRAPHS[graph]['title'], 'Total Top %i' % TOP_N_VALUES)
-            imgs.append({'title': title, 'filename':filename})
+            imgs.append([{'title': title, 'filename':filename}])
             if not self.exists(filename):
                 # Totals graphs
                 total_values = copy.copy(sorted_values[:TOP_N_VALUES])
@@ -125,7 +125,7 @@ class DBSize(OutputFile):
             for j, values in enumerate(groups):
                 filename = self._get_filename(graph + str(i), j)
                 title = '%s %s' % (self.GRAPHS[graph]['title'], 'All %i/%i' % (j + 1, len(groups)))
-                imgs.append({'title': title, 'filename':filename})
+                imgs[-1].append({'title': title, 'filename':filename})
                 if self.exists(filename):
                     continue
                 _values = [val[1] for val in values]

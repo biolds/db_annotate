@@ -78,4 +78,4 @@ if __name__ == '__main__':
 
     # Generate HTML files
     html_file = HtmlFile('index.html')
-    html_file.render(imgs)
+    html_file.render(imgs, db_size)

@@ -14,7 +14,8 @@ class OutputFile:
             os.mkdir(OUTPUT_DIR)
 
     def close(self):
-        self.fd.close()
+        if self.fd is not None:
+            self.fd.close()
 
     def write(self, buf):
         if self.fd is None:
