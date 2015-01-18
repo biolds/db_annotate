@@ -1,7 +1,7 @@
 import os
 
 from db_size import humanize
-from output_file import OutputFile
+from output_file import OutputFile, OUTPUT_DIR
 
 HTML_BODY = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -32,7 +32,25 @@ class DBSizeFile(OutputFile):
         self.write(HTML_FOOTER)
 
 
-class HtmlFile(OutputFile):
+class TableFile(OutputFile):
+    @staticmethod
+    def get_table_html(img):
+        map_file = img + '.map'
+        img = os.path.basename(img)
+        html = '<img src="%s" usemap="#mainmap" /><map id="mainmap" name="mainmap">' % img
+        map_file = open(map_file, 'r')
+        html += map_file.read()
+        map_file.close()
+        html += '</map>'
+        return html
+
+    def render(self):
+        self.write(HTML_BODY % self.filename)
+        self.write('<a href="index.html">Back...</a><br/>')
+        self.write(TableFile.get_table_html(self.filename.replace('.html', '.png')))
+        self.write(HTML_FOOTER)
+
+class IndexFile(OutputFile):
     def render(self, objects, db_size):
         for obj in objects:
             for _obj in obj:
@@ -66,9 +84,11 @@ class HtmlFile(OutputFile):
 
         for table in tables:
             self.write('<tr>')
-            for _table in table:
+            for no, _table in enumerate(table):
+                if no == 0:
+                    _table = '<a href="%s.html" >%s</a>' % (_table, _table)
                 self.write('<td>%s</td>' % _table)
             self.write('</tr>')
         self.write('</table>')
-
+        self.write(TableFile.get_table_html(os.path.join(OUTPUT_DIR, 'map.png')))
         self.write(HTML_FOOTER)

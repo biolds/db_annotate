@@ -8,7 +8,7 @@ class DotFile(OutputFile):
     def render(self, gv_file):
         if self.exists():
             return
-        cmd = ['dot', '-Tpng', '-o', self.filename, gv_file]
+        cmd = ['dot', '-Tcmapx', '-o' + self.filename + '.map', '-Tpng', '-o' + self.filename, gv_file]
 
         try:
             output = subprocess.check_output(cmd)

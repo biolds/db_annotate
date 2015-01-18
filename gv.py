@@ -6,101 +6,66 @@ digraph G {
     splines = true;
     node [shape=plaintext];
 
-    subgraph {
-    rank = sink;
-    label = "Legend table";
-    graph[style=solid];
-    bgcolor=gray;
-
-    // Legend
-    legend [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-            <TR>
-                <TD BGCOLOR="white"><B>Legend (size without indexes/total size/lines count)</B></TD>
-                <TD >I'</TD>
-                <TD >NN'</TD>
-                <TD >U'</TD>
-            </TR>
-            <TR>
-                <TD ALIGN="left" BGCOLOR="gray">column</TD>
-                <TD BGCOLOR="gray"></TD>
-                <TD BGCOLOR="gray"></TD>
-                <TD BGCOLOR="gray"></TD>
-                <TD ALIGN="right" BGCOLOR="gray">data type</TD>
-            </TR>
-            <TR>
-                <TD ALIGN="left" BGCOLOR="limegreen">column_with_a_foreign_key</TD>
-                <TD BGCOLOR="limegreen"></TD>
-                <TD BGCOLOR="limegreen"></TD>
-                <TD BGCOLOR="limegreen"></TD>
-                <TD ALIGN="right" PORT="legend_foreign_key" BGCOLOR="limegreen">data type</TD>
-            </TR>
-            <TR>
-                <TD ALIGN="left" BGCOLOR="gray">I', NN', U': Index, Non null, Unique</TD>
-                <TD BGCOLOR="gray"></TD>
-                <TD BGCOLOR="gray"></TD>
-                <TD BGCOLOR="gray"></TD>
-                <TD ALIGN="right" BGCOLOR="gray"></TD>
-            </TR>
-        </TABLE>>];
-    legend2 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-            <TR>
-                <TD BGCOLOR="firebrick1"><B>Example table with errors</B></TD>
-                <TD BGCOLOR="firebrick1">I</TD>
-                <TD BGCOLOR="firebrick1">NN</TD>
-                <TD BGCOLOR="firebrick1">U</TD>
-                <TD BGCOLOR="firebrick1"></TD>
-                <TD BGCOLOR="firebrick1">table errors</TD>
-            </TR>
-            <TR>
-                <TD ALIGN="left" PORT="legend_primary_key" BGCOLOR="firebrick1">column_with_a_primary_key</TD>
-                <TD BGCOLOR="firebrick1"></TD>
-                <TD BGCOLOR="firebrick1"></TD>
-                <TD BGCOLOR="firebrick1"></TD>
-                <TD ALIGN="right" BGCOLOR="firebrick1">data type</TD>
-                <TD ALIGN="left" BGCOLOR="firebrick1">column errors</TD>
-            </TR>
-        </TABLE>>];
-
-        // Link the two table
-        // :e / :w to tell to link from the East border of the cell to the West border
-        // of the other cell
-        legend:legend_foreign_key:e -> legend2:legend_primary_key:w;
-        image -> legend [style=invis];
-        }
 """
 GV_FOOTER = """
 }
 """
 GV_SEPARATOR = '__42deadbeef__'
 
+
 class GV(OutputFile):
-    def __init__(self, filename):
+    def __init__(self, filename, minimap=False):
         super(GV, self).__init__(filename)
-        self.tables = {}
+        self.tables = []
+        self.minimap = minimap
 
     def add_header(self):
         self.write(GV_HEADER)
 
-    def add_table(self, name, errors, sizes, keys, indexes, columns):
+    def add_table(self, name, errors, sizes, keys, indexes, columns, highlight=False):
+        if name in self.tables:
+            return
+        self.tables.append(name)
         sizes = sizes[:2] + [sizes[4]]
-        # Display the table in red when there is no entries
+
         color = 'white'
         if len(errors):
             color = 'firebrick1'
 
-        table = """{name} [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+        if self.minimap:
+            fontsize = 'fontsize="7"'
+        elif highlight:
+            fontsize = 'fontsize="16"'
+        else:
+            fontsize = 'fontsize="10"'
+
+        url = ''
+        if not highlight:
+            url = 'URL="%s.html"' % name
+
+        table = """{name} [ {url} {fontsize} label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
         <TR>
             <TD PORT="{name}" BGCOLOR="{color}"><B>{name} ({sizes})</B></TD>
-            <TD BGCOLOR="{color}">I</TD>
-            <TD BGCOLOR="{color}">NN</TD>
-            <TD BGCOLOR="{color}">U</TD>
-            <TD BGCOLOR="{color}"></TD>
-            <TD ALIGN="left" BGCOLOR="{color}">{errors}</TD>
-        </TR>""".format(name=name,
+        """
+        if not self.minimap:
+            table += """
+                <TD BGCOLOR="{color}">I</TD>
+                <TD BGCOLOR="{color}">NN</TD>
+                <TD BGCOLOR="{color}">U</TD>
+                <TD BGCOLOR="{color}"></TD>
+                <TD ALIGN="left" BGCOLOR="{color}">{errors}</TD>"""
+        table += '</TR>'
+        table = table.format(name=name,
                         color=color,
                         sizes='/'.join([str(n) for n in sizes]),
-                        errors=', '.join(errors))
+                        errors=', '.join(errors),
+                        fontsize=fontsize,
+                        url=url)
         self.write(table)
+
+        if self.minimap:
+            self.write("</TABLE>>];")
+            return
 
         for col in columns:
             col_id = "%s%s%s" % (name, GV_SEPARATOR, col.name)
@@ -139,24 +104,36 @@ class GV(OutputFile):
         self.write("</TABLE>>];")
 
     def add_constraint(self, src, dst):
-        self.write("%s:%s1:e -> %s:%s:w;" % (src[0], GV_SEPARATOR.join(src),
-                                    dst[0], GV_SEPARATOR.join(dst)))
+        if self.minimap:
+            self.write("%s -> %s;" % (src[0], dst[0]))
+        else:
+            self.write("%s:%s1:e -> %s:%s:w;" % (src[0], GV_SEPARATOR.join(src),
+                                                 dst[0], GV_SEPARATOR.join(dst)))
 
     def add_missing_constraint(self, table, column, other_table, error):
-        self.write('%s:%s1:e -> %s [label="%s" fontcolor="red", color="red"];' % (table, GV_SEPARATOR.join([table, column]),
+        if self.minimap:
+            self.write('%s -> %s [fontcolor="red", color="red"];' % (table, other_table))
+        else:
+            self.write('%s:%s1:e -> %s [label="%s" fontcolor="red", color="red"];' % (table, GV_SEPARATOR.join([table, column]),
                                     other_table, error))
 
     def add_inherited(self, src, dst):
         # :s for the South side of the table
-        self.write('%s -> %s:%s [label="inherits" fontcolor=limegreen color=limegreen];' % (dst, src, src))
+        if self.minimap:
+            self.write('%s -> %s [fontcolor="limegreen" color="limegreen"];' % (dst, src))
+        else:
+            self.write('%s -> %s:n [label="inherits" fontcolor="limegreen" color="limegreen"];' % (dst, src))
 
     def add_duplicate(self, src, dst, duplicate_type):
-        self.write('%s -> %s:%s [label="%s" fontcolor=red color=red];' % (src, dst, dst, ', '.join(duplicate_type)))
+        if self.minimap:
+            self.write('%s -> %s [fontcolor="red" color="red"];' % (src, dst))
+        else:
+            self.write('%s -> %s:n [label="%s" fontcolor="red" color="red"];' % (src, dst, ', '.join(duplicate_type)))
 
     def add_footer(self):
         self.write(GV_FOOTER)
 
     def add_namespace(self, namespace, tables):
-        self.write('%s [label="%s", shape=square, fontsize=64];' % (namespace, namespace.title()))
+        self.write('%s [label="%s", shape="square"];' % (namespace, namespace.title()))
         for table in tables:
-            self.write('%s -> %s:%s [style="dashed"];' % (namespace, table, table))
+            self.write('%s -> %s [style="dashed"];' % (namespace, table))

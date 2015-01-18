@@ -6,6 +6,7 @@ OUTPUT_DIR = 'db_annotate'
 class OutputFile:
     def __init__(self, filename):
         self.fd = None
+        self.basename = filename
         self.filename = os.path.join(OUTPUT_DIR, filename)
 
     @staticmethod
