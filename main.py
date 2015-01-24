@@ -34,7 +34,9 @@ if __name__ == '__main__':
     db_size = DBSize()
 
     # DB size pies
+    print('Building table sizes')
     for table in db.get_tables():
+        print(table)
         sizes = db.get_table_size(table)
         db_size.add_table(table, sizes)
         gv_tables[table] = GV(table + '.gv')
@@ -46,6 +48,7 @@ if __name__ == '__main__':
     if not gv_map.exists():
         gv_map.add_header()
 
+        print('Building graphs')
         for table in db.get_tables():
             columns = db.get_columns(table)
             sizes = db.get_table_size(table)
@@ -56,6 +59,7 @@ if __name__ == '__main__':
             gv_tables[table].add_table(table, errors, sizes, keys, indexes, columns, True)
             tables[table] = (table, errors, sizes, keys, indexes, columns)
 
+        print('Adding constraints')
         # Constraints
         for table in db.get_tables():
             for src, dst in db.get_foreign_keys(table):
@@ -65,6 +69,7 @@ if __name__ == '__main__':
                 gv_tables[dst[0]].add_constraint(src, dst)
                 gv_map.add_constraint(src, dst)
 
+        print('Adding missing constraints')
         # Missing constraints
         for table in db.get_tables():
             for constraint in db.get_missing_constraints(table):
@@ -74,6 +79,7 @@ if __name__ == '__main__':
                 gv_tables[constraint[2]].add_missing_constraint(*constraint)
                 gv_map.add_missing_constraint(*constraint)
 
+        print('Adding inheritance')
         # Inheritance link
         for src, dst in db.get_inherited_tables():
             gv_map.add_inherited(src, dst)
@@ -82,6 +88,7 @@ if __name__ == '__main__':
             gv_tables[dst].add_table(*tables[src])
             gv_tables[dst].add_inherited(src, dst)
 
+        print('Adding duplicates')
         for _tables, duplicate_type in db.get_duplicated_tables().items():
             src, dst = _tables.split('/')
             gv_map.add_duplicate(src, dst, duplicate_type)
@@ -96,6 +103,7 @@ if __name__ == '__main__':
             for namespace, tables in namespaces:
                 gv_map.add_namespace(namespace, tables)
 
+        print('Building graphs images')
         for gv in [gv_map] + list(gv_tables.values()):
             gv.add_footer()
             gv.close()
