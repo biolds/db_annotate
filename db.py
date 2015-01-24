@@ -72,7 +72,9 @@ class DB:
             col.errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
                 try:
-                    subtable = session.query(col).select_from(table).limit(ROW_LIMIT).subquery()
+                    # Take ROW_LIMITs random rows
+                    subtable = session.query(col).select_from(table).order_by(func.random()).\
+                                    limit(ROW_LIMIT).subquery()
                     sub_col = getattr(subtable.c, col.name)
                     res = session.query(sub_col, func.count(sub_col)).group_by(sub_col).limit(MIN_TABLE_SIZE).all()
                 except InvalidRequestError:
