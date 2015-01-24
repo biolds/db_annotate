@@ -13,4 +13,4 @@ class DotFile(OutputFile):
         try:
             output = subprocess.check_output(cmd)
         except subprocess.CalledProcessError as e:
-            print('Error: command exited with status %i, displaying:\n%s' % (e.returncode, e.output), file=sys.stderr)
+            print('Error: command exited while processing fie %s with status %i, displaying:\n%s' % (gv_file, e.returncode, e.output), file=sys.stderr)
