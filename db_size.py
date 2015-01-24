@@ -40,7 +40,7 @@ class DBSize(OutputFile):
             'counter_type': 'b',
         }), (
         'tables', {
-            'title': 'Tables sizes (w/o indices)',
+            'title': 'Tables sizes (w/o indexes)',
             'counter_type': 'b',
         }), (
         'lines_count', {

@@ -1,14 +1,18 @@
 #!/usr/bin/python3
+import sys
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.exc import ProgrammingError, InvalidRequestError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData, Table
 from sqlalchemy.sql import func
 from sqlalchemy.types import Boolean, Enum, Integer
 
 MIN_TABLE_SIZE = 10
+ROW_LIMIT = 1000
 
+# TODO: merge this function with db_size.humanize
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
         if abs(num) < 1024.0:
@@ -54,12 +58,26 @@ class DB:
         self.inspector.reflecttable(table, None)
 
         for col in table.columns:
+            try:
+                # XXX hack to check sqlalchemy knows how to handle the data type
+                tmp = str(col.type).lower()  # noqa
+            except NotImplementedError:
+                # Ignore user defined data types
+                print('Unknown datatype, ignoring column %s of table %s' % (table, col.name), file=sys.stderr)
+                continue
+
             # XXX hack to work with mysql which doesn't have a real 'boolean' type
             is_bool = isinstance(col.type, Boolean) or (isinstance(col.type, Integer) and getattr(col.type, 'display_width', None) == 1)
 
             col.errors = []
             if sizes[4] >= MIN_TABLE_SIZE:
-                res = session.query(col, func.count(col)).select_from(table).group_by(col).limit(MIN_TABLE_SIZE).all()
+                try:
+                    subtable = session.query(col).select_from(table).limit(ROW_LIMIT).subquery()
+                    sub_col = getattr(subtable.c, col.name)
+                    res = session.query(sub_col, func.count(sub_col)).group_by(sub_col).limit(MIN_TABLE_SIZE).all()
+                except InvalidRequestError:
+                    print('Invalid request on:', table, col.name, file=sys.stderr)
+                    continue
                 if len(res) == 1 and res[0][1] > 1:
                     col.errors.append('value is always "%s"' % res[0][0])
                 elif not is_bool:
@@ -134,16 +152,21 @@ class DB:
 
     def get_table_size(self, table):
         # Based on http://www.niwi.be/2013/02/17/postgresql-database-table-indexes-size/
+        # TODO: remove try/except, use a portable query
         try:
-            r = self.engine.execute('select pg_relation_size(%(table_name)s), pg_total_relation_size(%(table_name)s)', {'table_name': table})
-        except Exception:
-            r = self.engine.execute('select data_length, data_length + index_length FROM information_schema.TABLES WHERE table_name = %s', table)
+            try:
+                r = self.engine.execute('select pg_relation_size(%(table_name)s), pg_total_relation_size(%(table_name)s)', {'table_name': table})
+            except Exception:
+                r = self.engine.execute('select data_length, data_length + index_length FROM information_schema.TABLES WHERE table_name = %s', table)
 
-        size, total_size = r.fetchone()
+            size, total_size = r.fetchone()
 
-        r = self.engine.execute('select count(*) from %s' % table)
-        count = r.fetchone()[0]
-        return [sizeof_fmt(size), sizeof_fmt(total_size), size, total_size, int(count)]
+            r = self.engine.execute('select count(*) from %s' % table)
+            count = r.fetchone()[0]
+            return [sizeof_fmt(size), sizeof_fmt(total_size), size, total_size, int(count)]
+        except ProgrammingError:
+            # On permission denied
+            return ['0', '0', 0, 0, 0]
 
     def get_duplicated_tables(self):
         tables = self.get_tables()
