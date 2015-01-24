@@ -1,3 +1,5 @@
+import cgi
+
 from output_file import OutputFile
 
 GV_HEADER = """
@@ -18,6 +20,11 @@ class GV(OutputFile):
         super(GV, self).__init__(filename)
         self.tables = []
         self.minimap = minimap
+
+    def _escape(self, s):
+        # Make the string one line
+        s = str(s or '\n').splitlines()[0]
+        return cgi.escape(s)
 
     def add_header(self):
         self.write(GV_HEADER)
@@ -55,6 +62,7 @@ class GV(OutputFile):
                 <TD BGCOLOR="{color}"></TD>
                 <TD ALIGN="left" BGCOLOR="{color}">{errors}</TD>"""
         table += '</TR>'
+        errors = [self._escape(err) for err in errors]
         table = table.format(name=name,
                         color=color,
                         sizes='/'.join([str(n) for n in sizes]),
@@ -82,6 +90,9 @@ class GV(OutputFile):
                     default = 'nextval'
                 col_type += '/def:' + default
 
+            # Escape errors (as they can contain exeception passed when reading sqlachemy's lazy values)
+            col_errors = [self._escape(err) for err in col.errors]
+
             column = """<TR>
                 <TD ALIGN="left" PORT="{col_id}" BGCOLOR="{color}">{column}</TD>
                 <TD BGCOLOR="{color}">{has_index}</TD>
@@ -97,8 +108,8 @@ class GV(OutputFile):
                 'has_index': has_index,
                 'unique': unique,
                 'not_nullable': not_nullable,
-                'error': ', '.join(col.errors),
-                'error_color': 'firebrick1' if len(col.errors) else color,
+                'error': ', '.join(col_errors),
+                'error_color': 'firebrick1' if len(col_errors) else color,
             })
             self.write(column)
         self.write("</TABLE>>];")
