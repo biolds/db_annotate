@@ -45,9 +45,16 @@ class TableFile(OutputFile):
         html += '</map>'
         return html
 
-    def render(self):
+    def render(self, table, errors, sizes, keys, indexes, columns):
         self.write(HTML_BODY % self.filename)
-        self.write('<a href="index.html">Back...</a><br/>')
+        self.write('''<a href="index.html">Back...</a><br/>
+                    <h1>Table %s</h1>
+                    <ul>
+                        <li>Size: %s</li>
+                        <li>Size without indexes: %s</li>
+                        <li>Rows count: %i</li>
+                        <li>Keys: %s</li>
+                    </ul>''' % (table, sizes[1], sizes[0], sizes[4], ', '.join(keys)))
         self.write(TableFile.get_table_html(self.filename.replace('.html', '.png')))
         self.write(HTML_FOOTER)
 

@@ -99,11 +99,19 @@ if __name__ == '__main__':
     namespaces = db.get_namespaces().items()
     if len(namespaces) != 1:
         # Show namespaces only when there are more than one
-        for namespace, tables in namespaces:
-            gv_map.add_namespace(namespace, tables)
+        for namespace, _tables in namespaces:
+            gv_map.add_namespace(namespace, _tables)
 
     print('Building graphs images')
-    for gv in [gv_map] + list(gv_tables.values()):
+    # Render the mini-map
+    gv_map
+    gv_map.add_footer()
+    gv_map.close()
+
+    dot = DotFile('map.png')
+    dot.render(gv_map.filename)
+
+    for table, gv in gv_tables.items():
         gv.add_footer()
         gv.close()
 
@@ -111,7 +119,7 @@ if __name__ == '__main__':
         dot.render(gv.filename)
 
         table_html = TableFile(gv.basename.replace('.gv', '.html'))
-        table_html.render()
+        table_html.render(*tables[table])
 
     # Generate HTML files
     html_file = IndexFile('index.html')
