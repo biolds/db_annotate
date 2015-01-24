@@ -14,13 +14,13 @@ Then run the script:
 
 ::
 
-    $ ./main.py mysql://username:password@host/database
+    $ ./bin/db_annotate mysql://username:password@host/database
 
 or
 
 ::
 
-    $ ./main.py postgresql://username:password@host/database
+    $ ./bin/db_annotate postgresql://username:password@host/database
 
 
 The output will be available in the db_annotate/ directory under the current working directory.
