@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 
 from db_size import humanize
@@ -51,12 +52,21 @@ class TableFile(OutputFile):
         self.write(HTML_FOOTER)
 
 class IndexFile(OutputFile):
-    def render(self, objects, db_size):
+    def render(self, objects, db_size, db):
         for obj in objects:
             for _obj in obj:
                 _obj['url'] = os.path.basename(_obj['filename'])
 
         self.write(HTML_BODY % self.filename)
+        self.write('''<ul>
+                        <li>Database: %s</li>
+                        <li>Date: %s</li>
+                        <li>Tables count: %s</li>
+                        <li>Total size: %s</li>
+                    </ul>''' % (repr(db.engine.url),
+                                datetime.now().strftime('%x'),
+                                len(db.get_tables()),
+                                humanize(sum(db_size.total_size.values()), 'b')))
 
         for i, obj in enumerate(objects):
             self.write('''
