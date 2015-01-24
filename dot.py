@@ -6,8 +6,6 @@ from output_file import OutputFile
 
 class DotFile(OutputFile):
     def render(self, gv_file):
-        if self.exists():
-            return
         cmd = ['dot', '-Tcmapx', '-o' + self.filename + '.map', '-Tpng', '-o' + self.filename, gv_file]
 
         try:

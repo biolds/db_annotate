@@ -24,10 +24,3 @@ class OutputFile:
         if '\n' not in buf:
             buf += '\n'
         self.fd.write(buf)
-
-    def exists(self, filename=None):
-        filename = filename or self.filename
-        exists = os.path.exists(filename)
-        if exists:
-            print("Warning: file %s already exists. Remove it first to rebuild it." % filename)
-        return exists

@@ -45,74 +45,73 @@ if __name__ == '__main__':
     imgs = db_size.render()
 
     # Tables
-    if not gv_map.exists():
-        gv_map.add_header()
+    gv_map.add_header()
 
-        print('Building graphs')
-        for table in db.get_tables():
-            columns = db.get_columns(table)
-            sizes = db.get_table_size(table)
-            keys = db.get_table_keys(table)
-            indexes = db.get_table_index(table)
-            errors = db.get_table_errors(table)
-            gv_map.add_table(table, errors, sizes, keys, indexes, columns)
-            gv_tables[table].add_table(table, errors, sizes, keys, indexes, columns, True)
-            tables[table] = (table, errors, sizes, keys, indexes, columns)
+    print('Building graphs')
+    for table in db.get_tables():
+        columns = db.get_columns(table)
+        sizes = db.get_table_size(table)
+        keys = db.get_table_keys(table)
+        indexes = db.get_table_index(table)
+        errors = db.get_table_errors(table)
+        gv_map.add_table(table, errors, sizes, keys, indexes, columns)
+        gv_tables[table].add_table(table, errors, sizes, keys, indexes, columns, True)
+        tables[table] = (table, errors, sizes, keys, indexes, columns)
 
-        print('Adding constraints')
-        # Constraints
-        for table in db.get_tables():
-            for src, dst in db.get_foreign_keys(table):
-                gv_tables[table].add_table(*tables[dst[0]])
-                gv_tables[table].add_constraint(src, dst)
-                gv_tables[dst[0]].add_table(*tables[table])
-                gv_tables[dst[0]].add_constraint(src, dst)
-                gv_map.add_constraint(src, dst)
+    print('Adding constraints')
+    # Constraints
+    for table in db.get_tables():
+        for src, dst in db.get_foreign_keys(table):
+            gv_tables[table].add_table(*tables[dst[0]])
+            gv_tables[table].add_constraint(src, dst)
+            gv_tables[dst[0]].add_table(*tables[table])
+            gv_tables[dst[0]].add_constraint(src, dst)
+            gv_map.add_constraint(src, dst)
 
-        print('Adding missing constraints')
-        # Missing constraints
-        for table in db.get_tables():
-            for constraint in db.get_missing_constraints(table):
-                gv_tables[table].add_table(*tables[constraint[2]])
-                gv_tables[table].add_missing_constraint(*constraint)
-                gv_tables[constraint[2]].add_table(*tables[table])
-                gv_tables[constraint[2]].add_missing_constraint(*constraint)
-                gv_map.add_missing_constraint(*constraint)
+    print('Adding missing constraints')
+    # Missing constraints
+    for table in db.get_tables():
+        for constraint in db.get_missing_constraints(table):
+            gv_tables[table].add_table(*tables[constraint[2]])
+            gv_tables[table].add_missing_constraint(*constraint)
+            gv_tables[constraint[2]].add_table(*tables[table])
+            gv_tables[constraint[2]].add_missing_constraint(*constraint)
+            gv_map.add_missing_constraint(*constraint)
 
-        print('Adding inheritance')
-        # Inheritance link
-        for src, dst in db.get_inherited_tables():
-            gv_map.add_inherited(src, dst)
-            gv_tables[src].add_table(*tables[dst])
-            gv_tables[src].add_inherited(src, dst)
-            gv_tables[dst].add_table(*tables[src])
-            gv_tables[dst].add_inherited(src, dst)
+    print('Adding inheritance')
+    # Inheritance link
+    for src, dst in db.get_inherited_tables():
+        gv_map.add_inherited(src, dst)
+        gv_tables[src].add_table(*tables[dst])
+        gv_tables[src].add_inherited(src, dst)
+        gv_tables[dst].add_table(*tables[src])
+        gv_tables[dst].add_inherited(src, dst)
 
-        print('Adding duplicates')
-        for _tables, duplicate_type in db.get_duplicated_tables().items():
-            src, dst = _tables.split('/')
-            gv_map.add_duplicate(src, dst, duplicate_type)
-            gv_tables[src].add_table(*tables[dst])
-            gv_tables[src].add_duplicate(src, dst, duplicate_type)
-            gv_tables[dst].add_table(*tables[src])
-            gv_tables[dst].add_duplicate(src, dst, duplicate_type)
+    print('Adding duplicates')
+    for _tables, duplicate_type in db.get_duplicated_tables().items():
+        src, dst = _tables.split('/')
+        gv_map.add_duplicate(src, dst, duplicate_type)
+        gv_tables[src].add_table(*tables[dst])
+        gv_tables[src].add_duplicate(src, dst, duplicate_type)
+        gv_tables[dst].add_table(*tables[src])
+        gv_tables[dst].add_duplicate(src, dst, duplicate_type)
 
-        namespaces = db.get_namespaces().items()
-        if len(namespaces) != 1:
-            # Show namespaces only when there are more than one
-            for namespace, tables in namespaces:
-                gv_map.add_namespace(namespace, tables)
+    namespaces = db.get_namespaces().items()
+    if len(namespaces) != 1:
+        # Show namespaces only when there are more than one
+        for namespace, tables in namespaces:
+            gv_map.add_namespace(namespace, tables)
 
-        print('Building graphs images')
-        for gv in [gv_map] + list(gv_tables.values()):
-            gv.add_footer()
-            gv.close()
+    print('Building graphs images')
+    for gv in [gv_map] + list(gv_tables.values()):
+        gv.add_footer()
+        gv.close()
 
-            dot = DotFile(gv.basename.replace('.gv', '.png'))
-            dot.render(gv.filename)
+        dot = DotFile(gv.basename.replace('.gv', '.png'))
+        dot.render(gv.filename)
 
-            table_html = TableFile(gv.basename.replace('.gv', '.html'))
-            table_html.render()
+        table_html = TableFile(gv.basename.replace('.gv', '.html'))
+        table_html.render()
 
     # Generate HTML files
     html_file = IndexFile('index.html')

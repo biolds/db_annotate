@@ -104,17 +104,16 @@ class DBSize(OutputFile):
             filename = self._get_filename(graph, i)
             title = '%s %s' % (self.GRAPHS[graph]['title'], 'Total Top %i' % TOP_N_VALUES)
             imgs.append([{'title': title, 'filename':filename}])
-            if not self.exists(filename):
-                # Totals graphs
-                total_values = copy.copy(sorted_values[:TOP_N_VALUES])
-                for j, val in enumerate(total_values):
-                    if val[1] < sorted_values[0][1] * 0.01: # 0.01 to limit the size of smallest part of the pie
-                        total_values = sorted_values[:j]
-                        break
+            # Totals graphs
+            total_values = copy.copy(sorted_values[:TOP_N_VALUES])
+            for j, val in enumerate(total_values):
+                if val[1] < sorted_values[0][1] * 0.01: # 0.01 to limit the size of smallest part of the pie
+                    total_values = sorted_values[:j]
+                    break
 
-                values = [val[1] for val in total_values]
-                labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in total_values]
-                self._render_pie(values, labels, title, filename)
+            values = [val[1] for val in total_values]
+            labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in total_values]
+            self._render_pie(values, labels, title, filename)
 
             def grouped(iterable, n):
                 "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
@@ -126,8 +125,7 @@ class DBSize(OutputFile):
                 filename = self._get_filename(graph + str(i), j)
                 title = '%s %s' % (self.GRAPHS[graph]['title'], 'All %i/%i' % (j + 1, len(groups)))
                 imgs[-1].append({'title': title, 'filename':filename})
-                if self.exists(filename):
-                    continue
+
                 _values = [val[1] for val in values]
                 labels = ['%s %s' % (val[0], humanize(val[1], self.GRAPHS[graph]['counter_type'])) for val in values]
                 self._render_pie(_values, labels, title, filename)
