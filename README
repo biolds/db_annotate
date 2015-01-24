@@ -1,3 +1,5 @@
+db_annotate is a database analysis tools. See a sample output `here </db_annotate/index.html>`_
+
 Debian packages requirements:
 aptitude install graphviz python3-{psycopg2,matplotlib,sqlalchemy}
 
