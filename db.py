@@ -22,7 +22,7 @@ def sizeof_fmt(num, suffix='B'):
 
 class DB:
     def __init__(self, url):
-        self.engine = create_engine(url, echo=False, pool_recycle=3600)
+        self.engine = create_engine(url, echo=False, pool_recycle=3600, pool_timeout=3600, pool_size=32)
         self.inspector = Inspector.from_engine(self.engine)
         self.Session = sessionmaker()
         self.Session.configure(bind=self.engine)
