@@ -2,7 +2,7 @@ import shlex
 import subprocess
 import sys
 
-from output_file import OutputFile
+from .output_file import OutputFile
 
 class DotFile(OutputFile):
     def render(self, gv_file):

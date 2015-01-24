@@ -1,6 +1,6 @@
 import cgi
 
-from output_file import OutputFile
+from .output_file import OutputFile
 
 GV_HEADER = """
 digraph G {

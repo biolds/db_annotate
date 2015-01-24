@@ -1,8 +1,8 @@
 from datetime import datetime
 import os
 
-from db_size import humanize
-from output_file import OutputFile, OUTPUT_DIR
+from .db_size import humanize
+from .output_file import OutputFile, OUTPUT_DIR
 
 HTML_BODY = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -54,7 +54,9 @@ class TableFile(OutputFile):
                         <li>Size without indexes: %s</li>
                         <li>Rows count: %i</li>
                         <li>Keys: %s</li>
-                    </ul>''' % (table, sizes[1], sizes[0], sizes[4], ', '.join(keys)))
+                        <li>Columns count: %i</li>
+                    </ul>''' % (table, sizes[1], sizes[0], sizes[4], ', '.join(keys),
+                                len(columns)))
         self.write(TableFile.get_table_html(self.filename.replace('.html', '.png')))
         self.write(HTML_FOOTER)
 

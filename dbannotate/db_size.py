@@ -5,7 +5,7 @@ import os
 from pygal import Pie, Config
 from pygal.style import SolidColorStyle
 
-from output_file import OutputFile, OUTPUT_DIR
+from .output_file import OutputFile, OUTPUT_DIR
 
 TOP_N_VALUES = 10
 

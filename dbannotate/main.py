@@ -1,18 +1,16 @@
-#!/usr/bin/python3
-
 import os
 import sys
 import subprocess
 
-from db import DB
-from db_size import DBSize
-from dot import DotFile
-from gv import GV
-from html import IndexFile, TableFile
-from output_file import OutputFile
+from .db import DB
+from .db_size import DBSize
+from .dot import DotFile
+from .gv import GV
+from .html import IndexFile, TableFile
+from .output_file import OutputFile
 
 
-if __name__ == '__main__':
+def main():
     try:
         if len(sys.argv) < 2:
             raise Exception('Invalid URI')
