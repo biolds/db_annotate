@@ -22,7 +22,7 @@ from .db import DB
 from .db_size import DBSize
 from .dot import DotFile
 from .gv import GV
-from .html import IndexFile, TableFile
+from .html import IndexFile, TableFile, FunctionFile, HilightCSSFile
 from .output_file import OutputFile
 
 
@@ -70,7 +70,8 @@ def main():
         errors = db.get_table_errors(table)
         gv_map.add_table(table, errors, sizes, keys, indexes, columns)
         gv_tables[table].add_table(table, errors, sizes, keys, indexes, columns, True)
-        tables[table] = (table, errors, sizes, keys, indexes, columns)
+        triggers = db.get_triggers(table)
+        tables[table] = (table, errors, sizes, keys, indexes, columns, triggers)
 
     print('Adding constraints')
     # Constraints
@@ -135,6 +136,24 @@ def main():
         table_html = TableFile(gv.basename.replace('.gv', '.html'))
         table_html.render(*tables[table])
 
+    # Functions
+    functions = []
+    _functions = db.get_functions()
+    if len(_functions):
+        print('Buildings functions')
+        css = HilightCSSFile()
+        css.render()
+        for function in _functions:
+            # TODO: there may be a naming conflict with table names here:
+            fn_name, fn_lang, fn_code = function
+            print(fn_name)
+            html = FunctionFile('fn_%s.html' % fn_name)
+            functions.append((fn_name, len(fn_code.splitlines())))
+            html.render(*function)
+
+        # Sort functions by higher lines count
+        functions = sorted(functions, key=lambda x:x[1])
+
     # Generate HTML files
     html_file = IndexFile('index.html')
-    html_file.render(imgs, db_size, db)
+    html_file.render(imgs, db_size, db, functions)

@@ -16,6 +16,11 @@
 
 from datetime import datetime
 import os
+import re
+
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers.sql import MySqlLexer, PlPgsqlLexer, PostgresConsoleLexer, PostgresLexer, SqlLexer, SqliteConsoleLexer
 
 from .db_size import humanize
 from .output_file import OutputFile, OUTPUT_DIR
@@ -26,6 +31,7 @@ HTML_BODY = """
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+%s
 <title>%s</title>
 </head>
 <body>
@@ -37,8 +43,15 @@ HTML_FOOTER = """
 
 
 class HTMLFile(OutputFile):
+    CSS = []
+    BACK_BUTTON = True
+
     def render(self, *args, **kw):
-        self.write(HTML_BODY % self.filename)
+        css = ['<link rel="stylesheet" type="text/css" href="%s">' % css for css in self.CSS]
+        css = '\n'.join(css)
+        if self.BACK_BUTTON:
+            self.write('<a href="index.html">Back...</a><br/>')
+        self.write(HTML_BODY % (css, self.filename))
         self._render(*args, **kw)
         self.write(HTML_FOOTER)
 
@@ -66,21 +79,35 @@ class TableFile(HTMLFile):
         html += '</map>'
         return html
 
-    def _render(self, table, errors, sizes, keys, indexes, columns):
-        self.write('''<a href="index.html">Back...</a><br/>
-                    <h1>Table %s</h1>
+    def _render(self, table, errors, sizes, keys, indexes, columns, triggers):
+        self.write('''<h1>Table %s</h1>
                     <ul>
                         <li>Size: %s</li>
                         <li>Size without indexes: %s</li>
                         <li>Rows count: %i</li>
                         <li>Keys: %s</li>
-                        <li>Columns count: %i</li>
-                    </ul>''' % (table, sizes[1], sizes[0], sizes[4], ', '.join(keys),
-                                len(columns)))
+                        <li>Columns count: %i</li>''' % (table, sizes[1], sizes[0],
+                                sizes[4], ', '.join(keys), len(columns)))
+
+        _triggers = []
+        for trigger in triggers:
+            tg_name, tg_event, tg_action, tg_when = trigger
+            tg_code = tg_func = ''
+            m = re.match('^EXECUTE PROCEDURE ([^ ]*)\(\)$', tg_action)
+            if m is not None:
+                tg_code = 'EXECUTE PROCEDURE'
+                tg_func = m.group(1)
+            _triggers.append('<li>%s: %s %s %s <a href="fn_%s.html">%s()</a></li>' %
+                   (tg_name, tg_when.title(), tg_event.title(),
+                   tg_code, tg_func, tg_func))
+        self.write('<li>Triggers:<ul>%s</ul></li>' % '\n'.join(_triggers))
+        self.write('</ul>')
+
         self.write(TableFile.get_table_html(self.filename.replace('.html', '.png')))
 
 class IndexFile(HTMLFile):
-    def _render(self, objects, db_size, db):
+    BACK_BUTTON = False
+    def _render(self, objects, db_size, db, functions):
         for obj in objects:
             for _obj in obj:
                 _obj['url'] = os.path.basename(_obj['filename'])
@@ -128,3 +155,36 @@ class IndexFile(HTMLFile):
             self.write('</tr>')
         self.write('</table>')
         self.write(TableFile.get_table_html(os.path.join(OUTPUT_DIR, 'map.png')))
+        if len(functions):
+            self.write('<h2>Functions</h2>')
+            self.write('<table><tr><th>Name</th><th>Lines count</th></tr>')
+            for function in functions:
+                self.write('<tr><td><a href="fn_%s.html">%s</a></td>' % (function[0], function[0]))
+                self.write('<td>%i</td></tr>' % function[1])
+            self.write('</table>')
+
+
+FORMATTER = HtmlFormatter()
+class HilightCSSFile(OutputFile):
+    def __init__(self):
+        super(HilightCSSFile, self).__init__('highlight.css')
+    def render(self):
+        self.write(FORMATTER.get_style_defs('.highlight'))
+
+class FunctionFile(HTMLFile):
+    CSS = ['highlight.css']
+    LEXERS = {
+        'plpgsql': PlPgsqlLexer(),
+    }
+
+    def _get_lexer(self, language):
+        if language not in self.LEXERS:
+            raise NotImplemented('Unknown function language "%s"' % language)
+        return self.LEXERS[language]
+
+    def _render(self, function, language, code):
+        lexer = self._get_lexer(language)
+        highlighted = highlight(code, lexer, FORMATTER)
+        self.write('<h1>Function %s</h1>' % function)
+        self.write('%s language' % language)
+        self.write(highlighted)

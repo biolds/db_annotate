@@ -230,3 +230,43 @@ class DB:
                 table not in [i[1] for i in inherited]:
             errors += ['has no foreign or primary key']
         return errors
+
+    # TODO: Factorize the get_functions/get_triggers below
+    def get_functions(self):
+        # http://stackoverflow.com/questions/16632117/get-all-procedural-user-defined-functions
+        try:
+            r = self.engine.execute('''SELECT
+                    pp.proname,
+                    pl.lanname,
+                    pg_get_functiondef(pp.oid)
+                    FROM pg_proc pp
+                    INNER JOIN pg_namespace pn ON (pp.pronamespace = pn.oid)
+                    INNER JOIN pg_language pl ON (pp.prolang = pl.oid)
+                    WHERE pl.lanname NOT IN ('c','internal')
+                        AND pn.nspname NOT LIKE 'pg_%%'
+                        AND pn.nspname <> 'information_schema';''')
+            res = r.fetchall()
+            return res
+        except Exception:
+            from traceback import print_exc
+            print_exc()
+            # if not supported by db
+            return []
+
+    def get_triggers(self, table):
+        # http://serverfault.com/questions/331024/how-can-i-show-the-content-of-a-trigger-with-psql
+        try:
+            r = self.engine.execute('''SELECT trigger_name,
+                        event_manipulation,
+                        action_statement,
+                        action_timing
+                    FROM information_schema.triggers
+                    WHERE event_object_table = '%s'
+                    ORDER BY event_object_table,event_manipulation''' % table)
+            res = r.fetchall()
+            return res
+        except Exception:
+            from traceback import print_exc
+            print_exc()
+            # if not supported by db
+            return []
