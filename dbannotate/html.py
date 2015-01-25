@@ -49,9 +49,9 @@ class HTMLFile(OutputFile):
     def render(self, *args, **kw):
         css = ['<link rel="stylesheet" type="text/css" href="%s">' % css for css in self.CSS]
         css = '\n'.join(css)
+        self.write(HTML_BODY % (css, self.filename))
         if self.BACK_BUTTON:
             self.write('<a href="index.html">Back...</a><br/>')
-        self.write(HTML_BODY % (css, self.filename))
         self._render(*args, **kw)
         self.write(HTML_FOOTER)
 
