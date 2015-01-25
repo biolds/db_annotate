@@ -36,20 +36,25 @@ HTML_FOOTER = """
 """
 
 
-class DBSizeFile(OutputFile):
+class HTMLFile(OutputFile):
+    def render(self, *args, **kw):
+        self.write(HTML_BODY % self.filename)
+        self._render(*args, **kw)
+        self.write(HTML_FOOTER)
+
+class DBSizeFile(HTMLFile):
     def __init__(self, filename, dbsize_no):
-        OutputFile.__init__(self, '%s%i.html' % (filename, dbsize_no))
+        HTMLFile.__init__(self, '%s%i.html' % (filename, dbsize_no))
         self.dbsize_no = dbsize_no
 
-    def render(self, objects):
-        self.write(HTML_BODY % self.filename)
+    def _render(self, objects):
         for obj in objects:
             self.write('''<figure style="display: inline"><embed type="image/svg+xml" src="%s" width="40%%" height="40%%"/>
             </figure>''' % (obj['url']))
         self.write(HTML_FOOTER)
 
 
-class TableFile(OutputFile):
+class TableFile(HTMLFile):
     @staticmethod
     def get_table_html(img):
         map_file = img + '.map'
@@ -61,8 +66,7 @@ class TableFile(OutputFile):
         html += '</map>'
         return html
 
-    def render(self, table, errors, sizes, keys, indexes, columns):
-        self.write(HTML_BODY % self.filename)
+    def _render(self, table, errors, sizes, keys, indexes, columns):
         self.write('''<a href="index.html">Back...</a><br/>
                     <h1>Table %s</h1>
                     <ul>
@@ -74,15 +78,13 @@ class TableFile(OutputFile):
                     </ul>''' % (table, sizes[1], sizes[0], sizes[4], ', '.join(keys),
                                 len(columns)))
         self.write(TableFile.get_table_html(self.filename.replace('.html', '.png')))
-        self.write(HTML_FOOTER)
 
-class IndexFile(OutputFile):
-    def render(self, objects, db_size, db):
+class IndexFile(HTMLFile):
+    def _render(self, objects, db_size, db):
         for obj in objects:
             for _obj in obj:
                 _obj['url'] = os.path.basename(_obj['filename'])
 
-        self.write(HTML_BODY % self.filename)
         self.write('''<ul>
                         <li>Database: %s</li>
                         <li>Date: %s</li>
@@ -126,4 +128,3 @@ class IndexFile(OutputFile):
             self.write('</tr>')
         self.write('</table>')
         self.write(TableFile.get_table_html(os.path.join(OUTPUT_DIR, 'map.png')))
-        self.write(HTML_FOOTER)
