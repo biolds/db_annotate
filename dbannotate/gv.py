@@ -45,7 +45,7 @@ class GV(OutputFile):
     def add_header(self):
         self.write(GV_HEADER)
 
-    def add_table(self, name, errors, sizes, keys, indexes, columns, highlight=False):
+    def add_table(self, name, errors, sizes, keys, indexes, columns, triggers, highlight=False):
         if name in self.tables:
             return
         self.tables.append(name)

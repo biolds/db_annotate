@@ -68,9 +68,9 @@ def main():
         keys = db.get_table_keys(table)
         indexes = db.get_table_index(table)
         errors = db.get_table_errors(table)
-        gv_map.add_table(table, errors, sizes, keys, indexes, columns)
-        gv_tables[table].add_table(table, errors, sizes, keys, indexes, columns, True)
+        gv_map.add_table(table, errors, sizes, keys, indexes, columns, [])
         triggers = db.get_triggers(table)
+        gv_tables[table].add_table(table, errors, sizes, keys, indexes, columns, triggers, True)
         tables[table] = (table, errors, sizes, keys, indexes, columns, triggers)
 
     print('Adding constraints')
