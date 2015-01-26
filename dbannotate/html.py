@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from cgi import escape
 from datetime import datetime
 import os
 import re
@@ -175,16 +176,18 @@ class FunctionFile(HTMLFile):
     CSS = ['highlight.css']
     LEXERS = {
         'plpgsql': PlPgsqlLexer(),
+        'sql': SqlLexer(),
     }
 
     def _get_lexer(self, language):
-        if language not in self.LEXERS:
-            raise NotImplemented('Unknown function language "%s"' % language)
-        return self.LEXERS[language]
+        return self.LEXERS.get(language)
 
     def _render(self, function, language, code):
         lexer = self._get_lexer(language)
-        highlighted = highlight(code, lexer, FORMATTER)
+        if lexer is not None:
+            highlighted = highlight(code, lexer, FORMATTER)
+        else:
+            highlighted = '<pre>%s</pre>' % escape(code)
         self.write('<h1>Function %s</h1>' % function)
         self.write('%s language' % language)
         self.write(highlighted)

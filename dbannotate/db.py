@@ -220,7 +220,7 @@ class DB:
         if table_size == 0:
             errors += ['empty table']
         elif table_size < MIN_TABLE_SIZE:
-            errors += ['has only %s entries' % table_size]
+            errors += ['has only %s rows' % table_size]
 
         foreign = self.inspector.get_foreign_keys(table)
         primary = self.inspector.get_pk_constraint(table)
