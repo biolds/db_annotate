@@ -49,7 +49,7 @@ class GV(OutputFile):
         if name in self.tables:
             return
         self.tables.append(name)
-        sizes = sizes[:2] + [sizes[4]]
+        sizes = [sizes[i] for i in (1, 0, 4)]
 
         color = 'white'
         if len(errors):
