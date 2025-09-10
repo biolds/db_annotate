@@ -1,4 +1,4 @@
-db_annotate is a database analysis tools. See a `sample output </db_annotate/index.html>`_
+db_annotate is a database analysis tools. See a [sample output](http://piggledy.org/db_annotate/index.html).
 
 Debian packages requirements:
 aptitude install graphviz python3-{psycopg2,pygments,sqlalchemy}
@@ -8,21 +8,19 @@ Download Pygal (https://github.com/Kozea/pygal.git)
 Run:
 Eventually use the PYTHONPATH variable to use Pygal:
 
-::
-
+```
     $ export PYTHONPATH=/path/to/pygal/
+```
 
 Then run the script:
 
-::
-
+```
     $ ./bin/db_annotate mysql://username:password@host/database
 
 or
 
-::
-
+```
     $ ./bin/db_annotate postgresql://username:password@host/database
-
+```
 
 The output will be available in the db_annotate/ directory under the current working directory.
